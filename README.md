@@ -1,2 +1,2 @@
 # infra
-Deploy EKS to Terraform
+Deploy GKE to terraform
