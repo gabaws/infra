@@ -25,7 +25,7 @@ jobs:
           service_account: "terraform-deployer@infra-474223.iam.gserviceaccount.com"
       
       - name: Setup Terraform
-        uses: hashcorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v3
       
       - name: Terraform Init 
         run: terraform init 
@@ -34,4 +34,5 @@ jobs:
         run: terraform plan 
       
       - name: Terraform Apply
+
         run: terraform apply -auto-approve
