@@ -99,13 +99,13 @@ resource "google_container_cluster" "clusters" {
   }
 
   # Maintenance window
-  maintenance_policy {
-    recurring_window {
-      start_time = "2024-01-01T03:00:00Z"
-      end_time   = "2024-01-01T05:00:00Z"
-      recurrence = "FREQ=WEEKLY;BYDAY=SU"
+    maintenance_policy {
+      recurring_window {
+        start_time = "2024-01-01T03:00:00Z"
+        end_time   = "2024-01-01T15:00:00Z"
+        recurrence = "FREQ=WEEKLY;BYDAY=SU"
+      }
     }
-  }
 
   # Logging and monitoring
   logging_config {
