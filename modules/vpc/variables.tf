@@ -8,6 +8,12 @@ variable "network_name" {
   type        = string
 }
 
+variable "manage_network" {
+  description = "When false, reuse an existing VPC network with the provided name instead of creating it"
+  type        = bool
+  default     = true
+}
+
 variable "region" {
   description = "Default region for resources"
   type        = string

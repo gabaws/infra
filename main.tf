@@ -33,9 +33,10 @@ resource "google_project_service" "required_apis" {
 module "vpc" {
   source = "./modules/vpc"
 
-  project_id   = var.project_id
-  network_name = var.network_name
-  region       = var.region
+  project_id     = var.project_id
+  network_name   = var.network_name
+  manage_network = var.manage_network
+  region         = var.region
 
   subnets = var.subnets
 

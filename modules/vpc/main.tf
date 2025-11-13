@@ -9,12 +9,35 @@ terraform {
 
 # VPC Network
 resource "google_compute_network" "vpc" {
+  count                   = var.manage_network ? 1 : 0
   name                    = var.network_name
   auto_create_subnetworks = false
   routing_mode            = "REGIONAL"
 
   project = var.project_id
+}
 
+data "google_compute_network" "existing" {
+  count   = var.manage_network ? 0 : 1
+  name    = var.network_name
+  project = var.project_id
+}
+
+locals {
+  network_id = coalesce(
+    try(google_compute_network.vpc[0].id, null),
+    try(data.google_compute_network.existing[0].id, null)
+  )
+
+  network_self_link = coalesce(
+    try(google_compute_network.vpc[0].self_link, null),
+    try(data.google_compute_network.existing[0].self_link, null)
+  )
+
+  network_name = coalesce(
+    try(google_compute_network.vpc[0].name, null),
+    try(data.google_compute_network.existing[0].name, null)
+  )
 }
 
 # Subnets
@@ -26,7 +49,7 @@ resource "google_compute_subnetwork" "subnets" {
   name          = each.value.name
   ip_cidr_range = each.value.ip_cidr_range
   region        = each.value.region
-  network       = google_compute_network.vpc.id
+  network       = local.network_self_link
   project       = var.project_id
 
   description = try(each.value.description, "Subnet ${each.value.name}")
@@ -53,7 +76,7 @@ resource "google_compute_router" "router" {
 
   name    = "router-${each.value.region}"
   region  = each.value.region
-  network = google_compute_network.vpc.id
+  network = local.network_self_link
   project = var.project_id
 }
 
@@ -81,7 +104,7 @@ resource "google_compute_router_nat" "nat" {
 # Firewall rule for internal communication
 resource "google_compute_firewall" "allow_internal" {
   name    = "${var.network_name}-allow-internal"
-  network = google_compute_network.vpc.name
+  network = local.network_name
   project = var.project_id
 
   allow {
@@ -109,7 +132,7 @@ resource "google_compute_firewall" "allow_internal" {
 resource "google_compute_firewall" "allow_ssh" {
   count   = var.enable_ssh ? 1 : 0
   name    = "${var.network_name}-allow-ssh"
-  network = google_compute_network.vpc.name
+  network = local.network_name
   project = var.project_id
 
   allow {

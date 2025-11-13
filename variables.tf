@@ -16,6 +16,12 @@ variable "network_name" {
   default     = "main-vpc"
 }
 
+variable "manage_network" {
+  description = "When false, reuse an existing VPC network instead of creating it"
+  type        = bool
+  default     = true
+}
+
 variable "subnets" {
   description = "List of subnets to create"
   type = list(object({
