@@ -21,7 +21,7 @@ Este projeto provisiona uma infraestrutura escalável no Google Cloud Platform (
 flowchart TD
     subgraph Projeto["Projeto GCP (Project Factory)"]
         direction TB
-        VPC[VPC customizada\nRotas regionais]
+        VPC[VPC customizada<br/>Rotas regionais]
         subgraph Subnets["Sub-redes privadas"]
             S1[Subnet us-central1]
             S2[Subnet us-east1]
@@ -32,15 +32,15 @@ flowchart TD
         VPC --> NAT
     end
 
-    subgraph Cluster1["Cluster GKE 1\nus-central1-a"]
-        N1[Nós privados\nWorkload Identity]
+    subgraph Cluster1["Cluster GKE 1<br/>us-central1-a"]
+        N1[Nós privados<br/>Workload Identity]
     end
 
-    subgraph Cluster2["Cluster GKE 2\nus-east1-b"]
-        N2[Nós privados\nWorkload Identity]
+    subgraph Cluster2["Cluster GKE 2<br/>us-east1-b"]
+        N2[Nós privados<br/>Workload Identity]
     end
 
-    ASM[Anthos Service Mesh\n(GKE Hub + mTLS)]
+    ASM[Anthos Service Mesh<br/>(GKE Hub + mTLS)]
     Observabilidade[(Logging / Monitoring / Prometheus)]
 
     S1 --> Cluster1
@@ -95,15 +95,15 @@ flowchart LR
     classDef service fill:#fff7ed,stroke:#c2410c,stroke-width:1px,color:#1f2937;
     classDef observ fill:#fef3c7,stroke:#d97706,stroke-width:1px,color:#78350f;
 
-    A[Project Factory\n(Módulo Terraform)]:::module --> B[Projeto GCP\nBilling + APIs]:::infra
-    B --> C[VPC Custom\nSubnets privadas]:::infra
+    A[Project Factory<br/>(Módulo Terraform)]:::module --> B[Projeto GCP<br/>Billing + APIs]:::infra
+    B --> C[VPC Custom<br/>Subnets privadas]:::infra
     C --> D1[Cloud NAT]:::infra
     C --> D2[Firewall Rules]:::infra
-    C --> E1[Cluster GKE 1\nus-central1-a]:::service
-    C --> E2[Cluster GKE 2\nus-east1-b]:::service
-    E1 --> F[Anthos Service Mesh\nPlano de controle]:::service
+    C --> E1[Cluster GKE 1<br/>us-central1-a]:::service
+    C --> E2[Cluster GKE 2<br/>us-east1-b]:::service
+    E1 --> F[Anthos Service Mesh<br/>Plano de controle]:::service
     E2 --> F
-    F --> G[Observabilidade\nLogging / Monitoring / Prometheus]:::observ
+    F --> G[Observabilidade<br/>Logging / Monitoring / Prometheus]:::observ
 ```
 
 > A versão editável deste diagrama está disponível em `docs/architecture-components.mmd`.
