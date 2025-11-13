@@ -30,6 +30,7 @@ on:
 permissions:
   contents: read
   id-token: write
+  pull-requests: write
 
 jobs:
   detect-changes:
@@ -104,29 +105,46 @@ jobs:
       - name: Terraform Plan
         id: plan
         run: |
-          terraform plan -no-color -out=tfplan
-        continue-on-error: true
+          set -o pipefail
+          set +e
+          terraform plan -no-color -out=tfplan | tee tfplan.log
+          PLAN_EXIT=${PIPESTATUS[0]}
+          set -e
+          echo "exitcode=$PLAN_EXIT" >> "$GITHUB_OUTPUT"
+          if [ "$PLAN_EXIT" -eq 1 ]; then
+            echo "Terraform plan falhou." >&2
+            exit 1
+          fi
+          terraform show -no-color tfplan > tfplan.txt
       
       - name: Comment PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         env:
-          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+          PLAN_FILE: tfplan.txt
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const output = `#### Terraform Plan 📖
-            \`\`\`
-            ${process.env.PLAN}
-            \`\`\`
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
-            
-            github.rest.issues.createComment({
+            const fs = require('fs');
+            let plan = '';
+            try {
+              plan = fs.readFileSync(process.env.PLAN_FILE, 'utf8');
+            } catch (error) {
+              plan = 'Falha ao ler o plano Terraform.';
+            }
+            const body = [
+              '#### Terraform Plan 📖',
+              '```',
+              plan,
+              '```',
+              `*Pusher: @${context.actor}, Action: \`${context.eventName}\`*`
+            ].join('\n');
+            await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: output
-            })
+              body
+            });
 
   terraform-apply:
     needs: [detect-changes, terraform-plan]
@@ -153,7 +171,15 @@ jobs:
         run: terraform init
       
       - name: Terraform Plan
-        run: terraform plan -out=tfplan
+        run: |
+          set +e
+          terraform plan -no-color -out=tfplan
+          PLAN_EXIT=$?
+          set -e
+          if [ "$PLAN_EXIT" -eq 1 ]; then
+            echo "Terraform plan falhou." >&2
+            exit 1
+          fi
       
       - name: Terraform Apply
         run: |

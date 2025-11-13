@@ -9,10 +9,12 @@ output "mesh_status" {
       }
     }
   }
+  sensitive = true
 }
 
 output "membership_names" {
   description = "Names of GKE Hub memberships"
   value       = { for k, v in google_gke_hub_membership.memberships : k => v.name }
+  sensitive   = true
 }
 

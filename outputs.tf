@@ -21,11 +21,13 @@ output "subnets" {
 output "gke_clusters" {
   description = "GKE cluster information"
   value       = module.gke_clusters.cluster_info
+  sensitive   = true
 }
 
 output "anthos_service_mesh_status" {
   description = "Anthos Service Mesh configuration status"
   value       = module.anthos_service_mesh.mesh_status
+  sensitive   = true
 }
 
 output "cluster_endpoints" {
