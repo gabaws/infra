@@ -17,6 +17,15 @@ on:
       - '**/*.tfvars'
       - '.github/workflows/terraform-deploy.yaml'
   workflow_dispatch:  # Permite execução manual
+    inputs:
+      operation:
+        description: "Selecione a operação manual"
+        required: true
+        default: "deploy"
+        type: choice
+        options:
+          - deploy
+          - destroy
 
 permissions:
   contents: read
@@ -158,4 +167,33 @@ jobs:
       # - name: Terraform Apply (Targeted - GKE only)
       #   if: needs.detect-changes.outputs.gke == 'true' && needs.detect-changes.outputs.vpc != 'true' && needs.detect-changes.outputs.mesh != 'true'
       #   run: terraform apply -auto-approve -target=module.gke_clusters
+
+  terraform-destroy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.operation == 'destroy'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud via OIDC
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: "projects/961330940767/locations/global/workloadIdentityPools/github-actions-pool/providers/github"
+          service_account: "terraform-deployer@infra-474223.iam.gserviceaccount.com"
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.5.0"
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan Destroy
+        run: terraform plan -destroy -no-color
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve
 

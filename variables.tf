@@ -73,14 +73,14 @@ variable "secondary_ranges" {
 variable "gke_clusters" {
   description = "Configuration for GKE clusters"
   type = map(object({
-    region              = string
-    zone                = string
-    initial_node_count  = number
-    min_node_count      = number
-    max_node_count      = number
-    machine_type        = string
-    disk_size_gb        = number
-    enable_private_nodes = bool
+    region                  = string
+    zone                    = string
+    initial_node_count      = number
+    min_node_count          = number
+    max_node_count          = number
+    machine_type            = string
+    disk_size_gb            = number
+    enable_private_nodes    = bool
     enable_private_endpoint = bool
     master_authorized_networks = optional(list(object({
       cidr_block   = string
@@ -89,27 +89,27 @@ variable "gke_clusters" {
   }))
   default = {
     cluster-1 = {
-      region               = "us-central1"
-      zone                 = "us-central1-a"
-      initial_node_count   = 1
-      min_node_count       = 1
-      max_node_count       = 5
-      machine_type         = "e2-medium"
-      disk_size_gb         = 50
-      enable_private_nodes = true
-      enable_private_endpoint = false
+      region                     = "us-central1"
+      zone                       = "us-central1-a"
+      initial_node_count         = 1
+      min_node_count             = 1
+      max_node_count             = 5
+      machine_type               = "e2-medium"
+      disk_size_gb               = 50
+      enable_private_nodes       = true
+      enable_private_endpoint    = false
       master_authorized_networks = []
     }
     cluster-2 = {
-      region               = "us-east1"
-      zone                 = "us-east1-b"
-      initial_node_count   = 1
-      min_node_count       = 1
-      max_node_count       = 5
-      machine_type         = "e2-medium"
-      disk_size_gb         = 50
-      enable_private_nodes = true
-      enable_private_endpoint = false
+      region                     = "us-east1"
+      zone                       = "us-east1-b"
+      initial_node_count         = 1
+      min_node_count             = 1
+      max_node_count             = 5
+      machine_type               = "e2-medium"
+      disk_size_gb               = 50
+      enable_private_nodes       = true
+      enable_private_endpoint    = false
       master_authorized_networks = []
     }
   }

@@ -53,14 +53,6 @@ resource "google_gke_hub_feature" "mesh" {
   location = "global"
   project  = var.project_id
 
-  spec {
-    fleet_default_member_config {
-      mesh {
-        management = "MANAGEMENT_AUTOMATIC"
-      }
-    }
-  }
-
   depends_on = [
     google_project_service.mesh_api,
     google_project_service.gkehub_api,
