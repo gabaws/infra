@@ -15,7 +15,6 @@ resource "google_compute_network" "vpc" {
 
   project = var.project_id
 
-  depends_on = [var.project_id]
 }
 
 # Subnets
