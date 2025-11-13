@@ -1,0 +1,77 @@
+# Project Configuration
+project_id = "infra-474223"  # Existing GCP project ID
+
+# Region Configuration
+region = "us-central1"
+
+# VPC Configuration
+network_name = "main-vpc"
+
+# Subnets Configuration
+subnets = [
+  {
+    name          = "subnet-us-central1"
+    ip_cidr_range = "10.0.1.0/24"
+    region        = "us-central1"
+    description   = "Subnet for us-central1 region"
+  },
+  {
+    name          = "subnet-us-east1"
+    ip_cidr_range = "10.0.2.0/24"
+    region        = "us-east1"
+    description   = "Subnet for us-east1 region"
+  }
+]
+
+# Secondary IP Ranges for GKE (pods and services)
+secondary_ranges = {
+  "subnet-us-central1" = [
+    {
+      range_name    = "pods"
+      ip_cidr_range = "10.1.0.0/16"
+    },
+    {
+      range_name    = "services"
+      ip_cidr_range = "10.2.0.0/20"
+    }
+  ]
+  "subnet-us-east1" = [
+    {
+      range_name    = "pods"
+      ip_cidr_range = "10.3.0.0/16"
+    },
+    {
+      range_name    = "services"
+      ip_cidr_range = "10.4.0.0/20"
+    }
+  ]
+}
+
+# GKE Clusters Configuration
+gke_clusters = {
+  cluster-1 = {
+    region                = "us-central1"
+    zone                  = "us-central1-a"
+    initial_node_count    = 1
+    min_node_count        = 1
+    max_node_count        = 5
+    machine_type          = "e2-medium"
+    disk_size_gb          = 50
+    enable_private_nodes  = true
+    enable_private_endpoint = false
+    master_authorized_networks = []  # Add CIDR blocks if needed for private endpoint access
+  }
+  cluster-2 = {
+    region                = "us-east1"
+    zone                  = "us-east1-b"
+    initial_node_count    = 1
+    min_node_count        = 1
+    max_node_count        = 5
+    machine_type          = "e2-medium"
+    disk_size_gb          = 50
+    enable_private_nodes  = true
+    enable_private_endpoint = false
+    master_authorized_networks = []
+  }
+}
+

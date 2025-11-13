@@ -1,0 +1,9 @@
+# Configuração do Bootstrap
+# Este arquivo cria o bucket para armazenar o estado do Terraform
+# Execute: terraform init && terraform apply
+
+bootstrap_project_id = "infra-474223"  # Projeto onde o bucket será criado
+bucket_name          = "terraform-state-infra-474223"  # Nome único do bucket
+bucket_location      = "US"  # ou "us-central1", "europe-west1", etc.
+region               = "us-central1"
+

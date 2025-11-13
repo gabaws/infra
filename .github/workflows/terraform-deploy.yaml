@@ -1,0 +1,161 @@
+name: "Terraform Deploy GKE"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      # Trigger apenas quando arquivos Terraform são alterados
+      - '**/*.tf'
+      - '**/*.tfvars'
+      - '.github/workflows/terraform-deploy.yaml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**/*.tf'
+      - '**/*.tfvars'
+      - '.github/workflows/terraform-deploy.yaml'
+  workflow_dispatch:  # Permite execução manual
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      vpc: ${{ steps.filter.outputs.vpc }}
+      gke: ${{ steps.filter.outputs.gke }}
+      mesh: ${{ steps.filter.outputs.mesh }}
+      project: ${{ steps.filter.outputs.project }}
+      root: ${{ steps.filter.outputs.root }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Necessário para comparar com commit anterior
+      
+      - name: Detect changes
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            vpc:
+              - 'modules/vpc/**'
+              - 'main.tf'
+              - 'variables.tf'
+            gke:
+              - 'modules/gke/**'
+              - 'main.tf'
+              - 'variables.tf'
+            mesh:
+              - 'modules/anthos-service-mesh/**'
+              - 'main.tf'
+            project:
+              - 'main.tf'
+              - 'variables.tf'
+            root:
+              - 'main.tf'
+              - 'variables.tf'
+              - 'outputs.tf'
+              - 'versions.tf'
+
+  terraform-plan:
+    needs: detect-changes
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || needs.detect-changes.outputs.vpc == 'true' || needs.detect-changes.outputs.gke == 'true' || needs.detect-changes.outputs.mesh == 'true' || needs.detect-changes.outputs.project == 'true' || needs.detect-changes.outputs.root == 'true'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Authenticate to Google Cloud via OIDC
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: "projects/961330940767/locations/global/workloadIdentityPools/github-actions-pool/providers/github"
+          service_account: "terraform-deployer@infra-474223.iam.gserviceaccount.com"
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.5.0"
+      
+      - name: Terraform Init
+        run: terraform init
+      
+      - name: Terraform Format Check
+        run: terraform fmt -check
+      
+      - name: Terraform Validate
+        run: terraform validate
+      
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan -no-color -out=tfplan
+        continue-on-error: true
+      
+      - name: Comment PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Plan 📖
+            \`\`\`
+            ${process.env.PLAN}
+            \`\`\`
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+  terraform-apply:
+    needs: [detect-changes, terraform-plan]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && (needs.detect-changes.outputs.vpc == 'true' || needs.detect-changes.outputs.gke == 'true' || needs.detect-changes.outputs.mesh == 'true' || needs.detect-changes.outputs.project == 'true' || needs.detect-changes.outputs.root == 'true')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Authenticate to Google Cloud via OIDC
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: "projects/961330940767/locations/global/workloadIdentityPools/github-actions-pool/providers/github"
+          service_account: "terraform-deployer@infra-474223.iam.gserviceaccount.com"
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.5.0"
+      
+      - name: Terraform Init
+        run: terraform init
+      
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+      
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+      
+      # Opcional: Aplicar apenas recursos específicos baseado em mudanças
+      # Descomente e ajuste conforme necessário
+      # - name: Terraform Apply (Targeted - VPC only)
+      #   if: needs.detect-changes.outputs.vpc == 'true' && needs.detect-changes.outputs.gke != 'true' && needs.detect-changes.outputs.mesh != 'true'
+      #   run: terraform apply -auto-approve -target=module.vpc
+      
+      # - name: Terraform Apply (Targeted - GKE only)
+      #   if: needs.detect-changes.outputs.gke == 'true' && needs.detect-changes.outputs.vpc != 'true' && needs.detect-changes.outputs.mesh != 'true'
+      #   run: terraform apply -auto-approve -target=module.gke_clusters
+
