@@ -50,6 +50,8 @@ flowchart TD
     ASM --> Observabilidade
 ```
 
+> A versão editável deste diagrama está disponível em `docs/architecture-diagram.mmd`.
+
 ### Componentes Principais
 
 #### Projeto e Estado

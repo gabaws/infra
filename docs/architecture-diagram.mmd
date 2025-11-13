@@ -1,0 +1,30 @@
+flowchart TD
+    subgraph Projeto["Projeto GCP (Project Factory)"]
+        direction TB
+        VPC[VPC customizada\nRotas regionais]
+        subgraph Subnets["Sub-redes privadas"]
+            S1[Subnet us-central1]
+            S2[Subnet us-east1]
+        end
+        VPC --> S1
+        VPC --> S2
+        NAT[Cloud NAT]
+        VPC --> NAT
+    end
+
+    subgraph Cluster1["Cluster GKE 1\nus-central1-a"]
+        N1[Nós privados\nWorkload Identity]
+    end
+
+    subgraph Cluster2["Cluster GKE 2\nus-east1-b"]
+        N2[Nós privados\nWorkload Identity]
+    end
+
+    ASM[Anthos Service Mesh\n(GKE Hub + mTLS)]
+    Observabilidade[(Logging / Monitoring / Prometheus)]
+
+    S1 --> Cluster1
+    S2 --> Cluster2
+    Cluster1 --> ASM
+    Cluster2 --> ASM
+    ASM --> Observabilidade
