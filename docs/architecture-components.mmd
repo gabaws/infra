@@ -4,12 +4,12 @@ flowchart LR
     classDef service fill:#fff7ed,stroke:#c2410c,stroke-width:1px,color:#1f2937;
     classDef observ fill:#fef3c7,stroke:#d97706,stroke-width:1px,color:#78350f;
 
-    A[Project Factory<br/>(Módulo Terraform)]:::module --> B[Projeto GCP<br/>Billing + APIs]:::infra
-    B --> C[VPC Custom<br/>Subnets privadas]:::infra
-    C --> D1[Cloud NAT]:::infra
-    C --> D2[Firewall Rules]:::infra
-    C --> E1[Cluster GKE 1<br/>us-central1-a]:::service
-    C --> E2[Cluster GKE 2<br/>us-east1-b]:::service
-    E1 --> F[Anthos Service Mesh<br/>Plano de controle]:::service
+    A["Project Factory<br/>(M&oacute;dulo Terraform)"]:::module --> B["Projeto GCP<br/>Billing + APIs"]:::infra
+    B --> C["VPC Custom<br/>Subnets privadas"]:::infra
+    C --> D1["Cloud NAT"]:::infra
+    C --> D2["Firewall Rules"]:::infra
+    C --> E1["Cluster GKE 1<br/>us-central1-a"]:::service
+    C --> E2["Cluster GKE 2<br/>us-east1-b"]:::service
+    E1 --> F["Anthos Service Mesh<br/>Plano de controle"]:::service
     E2 --> F
-    F --> G[Observabilidade<br/>Logging / Monitoring / Prometheus]:::observ
+    F --> G["Observabilidade<br/>Logging / Monitoring / Prometheus"]:::observ
