@@ -72,9 +72,6 @@ resource "google_container_cluster" "clusters" {
     workload_pool = "${var.project_id}.svc.id.goog"
   }
 
-  # Enable GKE Autopilot features
-  enable_autopilot = false
-
   # Release channel
   release_channel {
     channel = "REGULAR"
@@ -132,8 +129,6 @@ resource "google_container_cluster" "clusters" {
     environment = "production"
     managed-by  = "terraform"
   }
-
-  depends_on = [var.network, var.subnetwork]
 }
 
 # Node pools for each cluster
