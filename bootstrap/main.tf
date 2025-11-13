@@ -44,10 +44,10 @@ variable "region" {
 module "terraform_backend" {
   source = "../modules/terraform-backend"
 
-  project_id       = var.bootstrap_project_id
-  bucket_name      = var.bucket_name
-  bucket_location  = var.bucket_location
-  force_destroy    = false
+  project_id         = var.bootstrap_project_id
+  bucket_name        = var.bucket_name
+  bucket_location    = var.bucket_location
+  force_destroy      = false
   num_newer_versions = 5
 
   labels = {
@@ -63,7 +63,7 @@ output "bucket_name" {
 
 output "backend_config" {
   description = "Backend configuration to add to versions.tf"
-  value = <<-EOT
+  value       = <<-EOT
     backend "gcs" {
       bucket = "${module.terraform_backend.bucket_name}"
       prefix = "terraform/state"

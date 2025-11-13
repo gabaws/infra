@@ -72,7 +72,7 @@ module "anthos_service_mesh" {
   project_id = var.project_id
   region     = var.region
 
-  clusters = module.gke_clusters.cluster_info
+  clusters = module.gke_clusters.cluster_registration_info
 
   depends_on = [
     google_project_service.required_apis,

@@ -24,7 +24,7 @@ resource "google_container_cluster" "clusters" {
   initial_node_count       = 1
 
   # Network configuration - find subnet matching cluster region
-  network    = var.network
+  network = var.network
   subnetwork = [
     for subnet_name, subnet in var.subnets : subnet.name
     if subnet.region == each.value.region
@@ -53,7 +53,7 @@ resource "google_container_cluster" "clusters" {
 
   # IP allocation policy for pods and services
   ip_allocation_policy {
-    cluster_secondary_range_name  = try([
+    cluster_secondary_range_name = try([
       for subnet_name, subnet in var.subnets : [
         for sec_range in subnet.secondary_ip_ranges : sec_range.range_name
         if sec_range.range_name == "pods" && subnet.region == each.value.region

@@ -11,7 +11,7 @@ terraform {
 resource "google_compute_network" "vpc" {
   name                    = var.network_name
   auto_create_subnetworks = false
-  routing_mode           = "REGIONAL"
+  routing_mode            = "REGIONAL"
 
   project = var.project_id
 
