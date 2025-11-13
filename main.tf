@@ -101,7 +101,6 @@ provider "kubernetes" {
   host                   = "https://${local.cluster_addons.cluster1.info.endpoint}"
   cluster_ca_certificate = base64decode(local.cluster_addons.cluster1.info.cluster_ca_certificate)
   token                  = data.google_client_config.default.access_token
-  load_config_file       = false
 }
 
 provider "kubernetes" {
@@ -109,12 +108,11 @@ provider "kubernetes" {
   host                   = "https://${local.cluster_addons.cluster2.info.endpoint}"
   cluster_ca_certificate = base64decode(local.cluster_addons.cluster2.info.cluster_ca_certificate)
   token                  = data.google_client_config.default.access_token
-  load_config_file       = false
 }
 
 provider "helm" {
   alias = "cluster1"
-  kubernetes {
+  kubernetes = {
     host                   = "https://${local.cluster_addons.cluster1.info.endpoint}"
     cluster_ca_certificate = base64decode(local.cluster_addons.cluster1.info.cluster_ca_certificate)
     token                  = data.google_client_config.default.access_token
@@ -123,7 +121,7 @@ provider "helm" {
 
 provider "helm" {
   alias = "cluster2"
-  kubernetes {
+  kubernetes = {
     host                   = "https://${local.cluster_addons.cluster2.info.endpoint}"
     cluster_ca_certificate = base64decode(local.cluster_addons.cluster2.info.cluster_ca_certificate)
     token                  = data.google_client_config.default.access_token
