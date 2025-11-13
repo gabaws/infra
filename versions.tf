@@ -20,9 +20,9 @@ terraform {
   # 4. Descomente as linhas abaixo e atualize o bucket name
   # 5. Execute: terraform init -migrate-state (para migrar o estado local)
 
-  # backend "gcs" {
-  #   bucket = "terraform-state-bucket-seu-projeto"
-  #   prefix = "terraform/state"
-  # }
+  backend "gcs" {
+    bucket = "terraform-state-infra-474223"
+    prefix = "terraform/state"
+  }
 }
 
