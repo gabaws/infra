@@ -79,6 +79,8 @@ flowchart TD
 - **GKE Hub**: registros centralizados dos clusters.
 - **Service Mesh**: configuração automática do plano de controle com certificados mTLS rotacionados.
 - **Multi-cluster**: roteamento seguro entre pods em clusters distintos com políticas unificadas.
+- **Plano de dados automatizado**: instalação do Istio (charts oficiais) em cada cluster com revision `asm-managed`.
+- **Gateway & GitOps**: provisionamento do Ingress Gateway e do ArgoCD via Helm, com opções de customização em `terraform.tfvars`.
 
 #### Segurança Complementar
 
@@ -224,6 +226,9 @@ terraform apply
     │   ├── main.tf
     │   ├── variables.tf
     │   └── outputs.tf
+    ├── cluster-addons/             # Add-ons (Istio, Gateway, ArgoCD)
+    │   ├── main.tf
+    │   └── variables.tf
     └── anthos-service-mesh/        # Módulo de Anthos Service Mesh
         ├── main.tf
         ├── variables.tf
@@ -297,6 +302,13 @@ secondary_ranges = {
 ### Reutilizar uma VPC existente
 
 Caso a rede já exista no projeto (por exemplo, ambientes compartilhados), defina `manage_network = false` em `terraform.tfvars`. O módulo deixará de criar a VPC e reutilizará a rede chamada em `network_name`, mantendo a criação das subnets e dos demais recursos associados.
+
+### Automatização do ASM Gateway e ArgoCD
+
+- `istio_chart_version`, `asm_revision`, `istiod_values` e `istio_gateway_values` controlam a instalação do Istio (base, istiod e ingress gateway) via Helm em todos os clusters.
+- `install_gateway`, `gateway_namespace` e `gateway_labels` permitem habilitar/desabilitar o gateway e customizar namespace/labels.
+- `install_argocd`, `argocd_chart_version`, `argocd_values` definem a instalação do ArgoCD por cluster.
+- Para adicionar novos clusters é necessário criar provedores `kubernetes`/`helm` com aliases adicionais em `main.tf` e instanciar o módulo `cluster-addons` correspondente.
 
 ## 📊 Outputs
 
