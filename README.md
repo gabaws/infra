@@ -7,6 +7,107 @@ Este projeto provisiona uma infraestrutura escalável no Google Cloud Platform (
 - **2 Clusters GKE** em zonas diferentes para alta disponibilidade
 - **Anthos Service Mesh** configurado para comunicação entre pods em clusters separados
 
+## 🏛️ Arquitetura do Ambiente
+
+### Visão Geral
+
+- **Governança**: projeto GCP dedicado criado via Project Factory, com APIs essenciais habilitadas e serviço de billing associado.
+- **Rede**: VPC customizada com sub-redes privadas replicadas em múltiplas regiões, Cloud NAT para saída controlada e regras de firewall opinadas.
+- **Cômputo Kubernetes**: dois clusters GKE privados distribuídos entre `us-central1-a` e `us-east1-b`, com Workload Identity, Auto-scaling, Network Policy e Binary Authorization.
+- **Malha de Serviço**: Anthos Service Mesh interligando os clusters e registrando-os no GKE Hub para tráfego seguro entre workloads.
+- **Observabilidade**: integrações nativas com Logging, Monitoring e Prometheus gerenciado.
+
+```mermaid
+flowchart TD
+    subgraph Projeto["Projeto GCP (Project Factory)"]
+        direction TB
+        VPC["VPC customizada<br/>Rotas regionais"]
+        subgraph Subnets["Sub-redes privadas"]
+            S1["Subnet us-central1"]
+            S2["Subnet us-east1"]
+        end
+        VPC --> S1
+        VPC --> S2
+        NAT["Cloud NAT"]
+        VPC --> NAT
+    end
+
+    subgraph Cluster1["Cluster GKE 1<br/>us-central1-a"]
+        N1["N&oacute;s privados<br/>Workload Identity"]
+    end
+
+    subgraph Cluster2["Cluster GKE 2<br/>us-east1-b"]
+        N2["N&oacute;s privados<br/>Workload Identity"]
+    end
+
+    ASM["Anthos Service Mesh<br/>(GKE Hub + mTLS)"]
+    Observabilidade["Logging / Monitoring / Prometheus"]
+
+    S1 --> Cluster1
+    S2 --> Cluster2
+    Cluster1 --> ASM
+    Cluster2 --> ASM
+    ASM --> Observabilidade
+```
+
+> A versão editável deste diagrama está disponível em `docs/architecture-diagram.mmd`.
+
+### Componentes Principais
+
+#### Projeto e Estado
+
+- **Provisionamento**: criação do projeto com políticas organizacionais herdadas e APIs ativadas automaticamente.
+- **Backend do Terraform**: suporta remote state em bucket GCS dedicado, garantindo controle de concorrência via Terraform Cloud Storage.
+
+#### Rede (VPC)
+
+- **Network**: VPC customizada com roteamento regional.
+- **Subnets**: sub-redes privadas com ranges secundários para pods e serviços.
+- **Cloud NAT**: garante acesso controlado à internet para nós privados.
+- **Firewall Rules**: opinadas para comunicação interna, monitoramento e (opcionalmente) acesso administrativo.
+
+#### Clusters GKE
+
+- **Distribuição**: dois clusters privados em zonas diferentes (HA regional).
+- **Workload Identity**: integração com IAM para fornecer identidades gerenciadas.
+- **Auto-scaling**: definição de limites de nós por pool, com escalonamento automático habilitado.
+- **Network Policy**: isolamento de tráfego L3/L4 entre pods.
+- **Logging e Monitoring**: envio nativo para serviços de observabilidade do GCP e suporte a Prometheus gerenciado.
+
+#### Anthos Service Mesh
+
+- **GKE Hub**: registros centralizados dos clusters.
+- **Service Mesh**: configuração automática do plano de controle com certificados mTLS rotacionados.
+- **Multi-cluster**: roteamento seguro entre pods em clusters distintos com políticas unificadas.
+
+#### Segurança Complementar
+
+- **Binary Authorization**: políticas para garantir que apenas imagens confiáveis sejam executadas.
+- **Service Accounts**: reforço para workloads com contas dedicadas e escopos mínimos.
+- **Master Authorized Networks**: suporte para restringir o endpoint do plano de controle, incluindo acesso privado opcional.
+
+### Diagrama de Componentes (Caixinhas)
+
+```mermaid
+flowchart LR
+    classDef module fill:#f3f4ff,stroke:#4f46e5,stroke-width:1px,color:#111827;
+    classDef infra fill:#ecfeff,stroke:#0e7490,stroke-width:1px,color:#0f172a;
+    classDef service fill:#fff7ed,stroke:#c2410c,stroke-width:1px,color:#1f2937;
+    classDef observ fill:#fef3c7,stroke:#d97706,stroke-width:1px,color:#78350f;
+
+    A["Project Factory<br/>(M&oacute;dulo Terraform)"]:::module --> B["Projeto GCP<br/>Billing + APIs"]:::infra
+    B --> C["VPC Custom<br/>Subnets privadas"]:::infra
+    C --> D1["Cloud NAT"]:::infra
+    C --> D2["Firewall Rules"]:::infra
+    C --> E1["Cluster GKE 1<br/>us-central1-a"]:::service
+    C --> E2["Cluster GKE 2<br/>us-east1-b"]:::service
+    E1 --> F["Anthos Service Mesh<br/>Plano de controle"]:::service
+    E2 --> F
+    F --> G["Observabilidade<br/>Logging / Monitoring / Prometheus"]:::observ
+```
+
+> A versão editável deste diagrama está disponível em `docs/architecture-components.mmd`.
+
 ## 📋 Pré-requisitos
 
 ### Software Necessário
@@ -128,30 +229,6 @@ terraform apply
         ├── variables.tf
         └── outputs.tf
 ```
-
-## 🏗️ Arquitetura
-
-### VPC
-
-- **Network**: VPC customizada com roteamento regional
-- **Subnets**: Subnets privadas em múltiplas regiões
-- **Cloud NAT**: Configurado para permitir acesso à internet para nós privados
-- **Firewall Rules**: Regras para comunicação interna e SSH (opcional)
-
-### GKE Clusters
-
-- **2 Clusters**: Um em `us-central1-a` e outro em `us-east1-b`
-- **Private Nodes**: Nós privados habilitados por padrão
-- **Workload Identity**: Habilitado para integração com serviços GCP
-- **Auto-scaling**: Configurado com mínimo e máximo de nós
-- **Network Policy**: Habilitado para segurança adicional
-- **Logging e Monitoring**: Habilitados com Prometheus gerenciado
-
-### Anthos Service Mesh
-
-- **GKE Hub**: Clusters registrados no GKE Hub
-- **Service Mesh**: Configurado automaticamente para comunicação entre clusters
-- **Multi-cluster**: Permite comunicação transparente entre pods em clusters diferentes
 
 ## 🔧 Configuração Avançada
 
