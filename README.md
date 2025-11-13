@@ -86,6 +86,28 @@ flowchart TD
 - **Service Accounts**: reforço para workloads com contas dedicadas e escopos mínimos.
 - **Master Authorized Networks**: suporte para restringir o endpoint do plano de controle, incluindo acesso privado opcional.
 
+### Diagrama de Componentes (Caixinhas)
+
+```mermaid
+flowchart LR
+    classDef module fill:#f3f4ff,stroke:#4f46e5,stroke-width:1px,color:#111827;
+    classDef infra fill:#ecfeff,stroke:#0e7490,stroke-width:1px,color:#0f172a;
+    classDef service fill:#fff7ed,stroke:#c2410c,stroke-width:1px,color:#1f2937;
+    classDef observ fill:#fef3c7,stroke:#d97706,stroke-width:1px,color:#78350f;
+
+    A[Project Factory\n(Módulo Terraform)]:::module --> B[Projeto GCP\nBilling + APIs]:::infra
+    B --> C[VPC Custom\nSubnets privadas]:::infra
+    C --> D1[Cloud NAT]:::infra
+    C --> D2[Firewall Rules]:::infra
+    C --> E1[Cluster GKE 1\nus-central1-a]:::service
+    C --> E2[Cluster GKE 2\nus-east1-b]:::service
+    E1 --> F[Anthos Service Mesh\nPlano de controle]:::service
+    E2 --> F
+    F --> G[Observabilidade\nLogging / Monitoring / Prometheus]:::observ
+```
+
+> A versão editável deste diagrama está disponível em `docs/architecture-components.mmd`.
+
 ## 📋 Pré-requisitos
 
 ### Software Necessário
