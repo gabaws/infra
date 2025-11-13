@@ -217,6 +217,10 @@ secondary_ranges = {
 }
 ```
 
+### Reutilizar uma VPC existente
+
+Caso a rede já exista no projeto (por exemplo, ambientes compartilhados), defina `manage_network = false` em `terraform.tfvars`. O módulo deixará de criar a VPC e reutilizará a rede chamada em `network_name`, mantendo a criação das subnets e dos demais recursos associados.
+
 ## 📊 Outputs
 
 Após o deploy, você pode acessar os seguintes outputs:

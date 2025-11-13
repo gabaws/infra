@@ -6,6 +6,7 @@ region = "us-central1"
 
 # VPC Configuration
 network_name = "main-vpc"
+manage_network = true
 
 # Subnets Configuration
 subnets = [

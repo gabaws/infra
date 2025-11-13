@@ -1,16 +1,16 @@
 output "network_name" {
   description = "The name of the VPC network"
-  value       = google_compute_network.vpc.name
+  value       = local.network_name
 }
 
 output "network_id" {
   description = "The ID of the VPC network"
-  value       = google_compute_network.vpc.id
+  value       = local.network_id
 }
 
 output "network_self_link" {
   description = "The self link of the VPC network"
-  value       = google_compute_network.vpc.self_link
+  value       = local.network_self_link
 }
 
 output "subnets" {
