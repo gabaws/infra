@@ -156,7 +156,9 @@ jobs:
         run: terraform plan -out=tfplan
       
       - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
+        run: |
+          export TF_LOG=ERROR
+          terraform apply -auto-approve tfplan
       
       # Opcional: Aplicar apenas recursos específicos baseado em mudanças
       # Descomente e ajuste conforme necessário
