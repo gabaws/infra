@@ -207,219 +207,219 @@ jobs:
           path: logs
           if-no-files-found: ignore
 
-    terraform-apply-bootstrap:
-      needs: [detect-changes, terraform-plan]
-      runs-on: ubuntu-latest
-      if: >
+  terraform-apply-bootstrap:
+    needs: [detect-changes, terraform-plan]
+    runs-on: ubuntu-latest
+    if: >
+      (
+        github.event_name == 'push' &&
+        github.ref == 'refs/heads/main' &&
         (
-          github.event_name == 'push' &&
-          github.ref == 'refs/heads/main' &&
-          (
-            needs.detect-changes.outputs.vpc == 'true' ||
-            needs.detect-changes.outputs.gke == 'true' ||
-            needs.detect-changes.outputs.mesh == 'true' ||
-            needs.detect-changes.outputs.project == 'true' ||
-            needs.detect-changes.outputs.root == 'true'
-          )
-        ) ||
-        (
-          github.event_name == 'workflow_dispatch' &&
-          github.event.inputs.operation == 'deploy' &&
-          github.ref == 'refs/heads/main'
+          needs.detect-changes.outputs.vpc == 'true' ||
+          needs.detect-changes.outputs.gke == 'true' ||
+          needs.detect-changes.outputs.mesh == 'true' ||
+          needs.detect-changes.outputs.project == 'true' ||
+          needs.detect-changes.outputs.root == 'true'
         )
+      ) ||
+      (
+        github.event_name == 'workflow_dispatch' &&
+        github.event.inputs.operation == 'deploy' &&
+        github.ref == 'refs/heads/main'
+      )
 
-      steps:
-        - name: Status do bootstrap
-          run: |
-            if [ "${{ needs.terraform-plan.outputs.clusters_exist }}" = "true" ]; then
-              echo "Clusters já existentes. Fase de bootstrap será ignorada."
-            else
-              echo "Clusters ausentes no estado. Executando bootstrap da infraestrutura base."
-            fi
+    steps:
+      - name: Status do bootstrap
+        run: |
+          if [ "${{ needs.terraform-plan.outputs.clusters_exist }}" = "true" ]; then
+            echo "Clusters já existentes. Fase de bootstrap será ignorada."
+          else
+            echo "Clusters ausentes no estado. Executando bootstrap da infraestrutura base."
+          fi
 
-        - name: Checkout repository
-          if: needs.terraform-plan.outputs.clusters_exist == 'false'
-          uses: actions/checkout@v4
+      - name: Checkout repository
+        if: needs.terraform-plan.outputs.clusters_exist == 'false'
+        uses: actions/checkout@v4
 
-        - name: Authenticate to Google Cloud via OIDC
-          if: needs.terraform-plan.outputs.clusters_exist == 'false'
-          id: auth-bootstrap
-          uses: google-github-actions/auth@v2
-          with:
-            workload_identity_provider: "projects/961330940767/locations/global/workloadIdentityPools/github-actions-pool/providers/github"
-            service_account: "terraform-deployer@infra-474223.iam.gserviceaccount.com"
+      - name: Authenticate to Google Cloud via OIDC
+        if: needs.terraform-plan.outputs.clusters_exist == 'false'
+        id: auth-bootstrap
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: "projects/961330940767/locations/global/workloadIdentityPools/github-actions-pool/providers/github"
+          service_account: "terraform-deployer@infra-474223.iam.gserviceaccount.com"
 
-        - name: Setup Terraform
-          if: needs.terraform-plan.outputs.clusters_exist == 'false'
-          uses: hashicorp/setup-terraform@v3
-          with:
-            terraform_version: "1.5.0"
+      - name: Setup Terraform
+        if: needs.terraform-plan.outputs.clusters_exist == 'false'
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.5.0"
 
-        - name: Terraform Init
-          if: needs.terraform-plan.outputs.clusters_exist == 'false'
-          run: terraform init
+      - name: Terraform Init
+        if: needs.terraform-plan.outputs.clusters_exist == 'false'
+        run: terraform init
 
-        - name: Terraform Plan (infra base)
-          if: needs.terraform-plan.outputs.clusters_exist == 'false'
-          run: |
-            set -o pipefail
-            set +e
-            mkdir -p logs
-            terraform plan -var enable_cluster_addons=false -no-color -out=tfplan-bootstrap | tee logs/terraform-plan-bootstrap.log
-            PLAN_EXIT=${PIPESTATUS[0]}
-            set -e
-            if [ "$PLAN_EXIT" -eq 1 ]; then
-              echo "Terraform plan (bootstrap) falhou." >&2
-              exit 1
-            fi
+      - name: Terraform Plan (infra base)
+        if: needs.terraform-plan.outputs.clusters_exist == 'false'
+        run: |
+          set -o pipefail
+          set +e
+          mkdir -p logs
+          terraform plan -var enable_cluster_addons=false -no-color -out=tfplan-bootstrap | tee logs/terraform-plan-bootstrap.log
+          PLAN_EXIT=${PIPESTATUS[0]}
+          set -e
+          if [ "$PLAN_EXIT" -eq 1 ]; then
+            echo "Terraform plan (bootstrap) falhou." >&2
+            exit 1
+          fi
 
-        - name: Terraform Apply (infra base)
-          if: needs.terraform-plan.outputs.clusters_exist == 'false'
-          run: |
-            set -o pipefail
-            set +e
-            export TF_LOG=ERROR
-            terraform apply -auto-approve tfplan-bootstrap | tee logs/terraform-apply-bootstrap.log
-            APPLY_EXIT=${PIPESTATUS[0]}
-            set -e
-            if [ "$APPLY_EXIT" -ne 0 ]; then
-              echo "Terraform apply (bootstrap) falhou." >&2
-              exit "$APPLY_EXIT"
-            fi
+      - name: Terraform Apply (infra base)
+        if: needs.terraform-plan.outputs.clusters_exist == 'false'
+        run: |
+          set -o pipefail
+          set +e
+          export TF_LOG=ERROR
+          terraform apply -auto-approve tfplan-bootstrap | tee logs/terraform-apply-bootstrap.log
+          APPLY_EXIT=${PIPESTATUS[0]}
+          set -e
+          if [ "$APPLY_EXIT" -ne 0 ]; then
+            echo "Terraform apply (bootstrap) falhou." >&2
+            exit "$APPLY_EXIT"
+          fi
 
-        - name: Diagnosticar falhas conhecidas (bootstrap)
-          if: failure()
-          run: |
-              if compgen -G "logs/*.log" > /dev/null; then
-                if grep -qi 'namespaces "istio-system" already exists' logs/*.log; then
-                  printf '%s\n' \
-                    "Foi detectado que o namespace \"istio-system\" já existe no cluster e não está sendo gerenciado pelo Terraform." \
-                    "Importe o recurso para o estado ou limpe-o manualmente antes de tentar novamente."
-                fi
-              else
-                echo "Nenhum log gerado para análise."
+      - name: Diagnosticar falhas conhecidas (bootstrap)
+        if: failure()
+        run: |
+            if compgen -G "logs/*.log" > /dev/null; then
+              if grep -qi 'namespaces "istio-system" already exists' logs/*.log; then
+                printf '%s\n' \
+                  "Foi detectado que o namespace \"istio-system\" já existe no cluster e não está sendo gerenciado pelo Terraform." \
+                  "Importe o recurso para o estado ou limpe-o manualmente antes de tentar novamente."
               fi
-        - name: Publicar logs do Terraform (bootstrap)
-          if: failure()
-          uses: actions/upload-artifact@v4
-          with:
-            name: terraform-logs-bootstrap
-            path: logs
-            if-no-files-found: ignore
+            else
+              echo "Nenhum log gerado para análise."
+            fi
+      - name: Publicar logs do Terraform (bootstrap)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-logs-bootstrap
+          path: logs
+          if-no-files-found: ignore
 
-    terraform-apply-addons:
-      needs: [detect-changes, terraform-plan, terraform-apply-bootstrap]
-      runs-on: ubuntu-latest
-      if: >
+  terraform-apply-addons:
+    needs: [detect-changes, terraform-plan, terraform-apply-bootstrap]
+    runs-on: ubuntu-latest
+    if: >
+      (
+        github.event_name == 'push' &&
+        github.ref == 'refs/heads/main' &&
         (
-          github.event_name == 'push' &&
-          github.ref == 'refs/heads/main' &&
-          (
-            needs.detect-changes.outputs.vpc == 'true' ||
-            needs.detect-changes.outputs.gke == 'true' ||
-            needs.detect-changes.outputs.mesh == 'true' ||
-            needs.detect-changes.outputs.project == 'true' ||
-            needs.detect-changes.outputs.root == 'true'
-          )
-        ) ||
-        (
-          github.event_name == 'workflow_dispatch' &&
-          github.event.inputs.operation == 'deploy' &&
-          github.ref == 'refs/heads/main'
+          needs.detect-changes.outputs.vpc == 'true' ||
+          needs.detect-changes.outputs.gke == 'true' ||
+          needs.detect-changes.outputs.mesh == 'true' ||
+          needs.detect-changes.outputs.project == 'true' ||
+          needs.detect-changes.outputs.root == 'true'
         )
-      env:
-        TF_VAR_enable_cluster_addons: true
+      ) ||
+      (
+        github.event_name == 'workflow_dispatch' &&
+        github.event.inputs.operation == 'deploy' &&
+        github.ref == 'refs/heads/main'
+      )
+    env:
+      TF_VAR_enable_cluster_addons: true
 
-      steps:
-        - name: Checkout repository
-          uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-        - name: Authenticate to Google Cloud via OIDC
-          id: auth-addons
-          uses: google-github-actions/auth@v2
-          with:
-            workload_identity_provider: "projects/961330940767/locations/global/workloadIdentityPools/github-actions-pool/providers/github"
-            service_account: "terraform-deployer@infra-474223.iam.gserviceaccount.com"
+      - name: Authenticate to Google Cloud via OIDC
+        id: auth-addons
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: "projects/961330940767/locations/global/workloadIdentityPools/github-actions-pool/providers/github"
+          service_account: "terraform-deployer@infra-474223.iam.gserviceaccount.com"
 
-        - name: Setup Terraform
-          uses: hashicorp/setup-terraform@v3
-          with:
-            terraform_version: "1.5.0"
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.5.0"
 
-        - name: Terraform Init
-          run: terraform init
+      - name: Terraform Init
+        run: terraform init
 
-        - name: Validar disponibilidade dos clusters antes dos add-ons
-          id: ensure-clusters
-          run: |
-            set +e
-            terraform state show 'module.gke_clusters.google_container_cluster.clusters["cluster-1"]' >/dev/null 2>&1
-            cluster1=$?
-            terraform state show 'module.gke_clusters.google_container_cluster.clusters["cluster-2"]' >/dev/null 2>&1
-            cluster2=$?
-            set -e
-            if [ "$cluster1" -eq 0 ] && [ "$cluster2" -eq 0 ]; then
-              echo "Clusters encontrados. Prosseguindo com instalação dos add-ons."
-            else
-              echo "Clusters ainda não disponíveis mesmo após o bootstrap." >&2
-              exit 1
-            fi
+      - name: Validar disponibilidade dos clusters antes dos add-ons
+        id: ensure-clusters
+        run: |
+          set +e
+          terraform state show 'module.gke_clusters.google_container_cluster.clusters["cluster-1"]' >/dev/null 2>&1
+          cluster1=$?
+          terraform state show 'module.gke_clusters.google_container_cluster.clusters["cluster-2"]' >/dev/null 2>&1
+          cluster2=$?
+          set -e
+          if [ "$cluster1" -eq 0 ] && [ "$cluster2" -eq 0 ]; then
+            echo "Clusters encontrados. Prosseguindo com instalação dos add-ons."
+          else
+            echo "Clusters ainda não disponíveis mesmo após o bootstrap." >&2
+            exit 1
+          fi
 
-        - name: Terraform Plan (infra + add-ons)
-          run: |
-            set -o pipefail
-            set +e
-            mkdir -p logs
-            terraform plan -no-color -out=tfplan-addons | tee logs/terraform-plan-addons.log
-            PLAN_EXIT=${PIPESTATUS[0]}
-            set -e
-            if [ "$PLAN_EXIT" -eq 1 ]; then
-              echo "Terraform plan (add-ons) falhou." >&2
-              exit 1
-            fi
+      - name: Terraform Plan (infra + add-ons)
+        run: |
+          set -o pipefail
+          set +e
+          mkdir -p logs
+          terraform plan -no-color -out=tfplan-addons | tee logs/terraform-plan-addons.log
+          PLAN_EXIT=${PIPESTATUS[0]}
+          set -e
+          if [ "$PLAN_EXIT" -eq 1 ]; then
+            echo "Terraform plan (add-ons) falhou." >&2
+            exit 1
+          fi
 
-        - name: Terraform Apply (infra + add-ons)
-          run: |
-            set -o pipefail
-            set +e
-            export TF_LOG=ERROR
-            terraform apply -auto-approve tfplan-addons | tee logs/terraform-apply-addons.log
-            APPLY_EXIT=${PIPESTATUS[0]}
-            set -e
-            if [ "$APPLY_EXIT" -ne 0 ]; then
-              echo "Terraform apply (add-ons) falhou." >&2
-              exit "$APPLY_EXIT"
-            fi
+      - name: Terraform Apply (infra + add-ons)
+        run: |
+          set -o pipefail
+          set +e
+          export TF_LOG=ERROR
+          terraform apply -auto-approve tfplan-addons | tee logs/terraform-apply-addons.log
+          APPLY_EXIT=${PIPESTATUS[0]}
+          set -e
+          if [ "$APPLY_EXIT" -ne 0 ]; then
+            echo "Terraform apply (add-ons) falhou." >&2
+            exit "$APPLY_EXIT"
+          fi
 
-        # Opcional: Aplicar apenas recursos específicos baseado em mudanças
-        # Descomente e ajuste conforme necessário
-        # - name: Terraform Apply (Targeted - VPC only)
-        #   if: needs.detect-changes.outputs.vpc == 'true' && needs.detect-changes.outputs.gke != 'true' && needs.detect-changes.outputs.mesh != 'true'
-        #   run: terraform apply -auto-approve -target=module.vpc
+      # Opcional: Aplicar apenas recursos específicos baseado em mudanças
+      # Descomente e ajuste conforme necessário
+      # - name: Terraform Apply (Targeted - VPC only)
+      #   if: needs.detect-changes.outputs.vpc == 'true' && needs.detect-changes.outputs.gke != 'true' && needs.detect-changes.outputs.mesh != 'true'
+      #   run: terraform apply -auto-approve -target=module.vpc
 
-        # - name: Terraform Apply (Targeted - GKE only)
-        #   if: needs.detect-changes.outputs.gke == 'true' && needs.detect-changes.outputs.vpc != 'true' && needs.detect-changes.outputs.mesh != 'true'
-        #   run: terraform apply -auto-approve -target=module.gke_clusters
+      # - name: Terraform Apply (Targeted - GKE only)
+      #   if: needs.detect-changes.outputs.gke == 'true' && needs.detect-changes.outputs.vpc != 'true' && needs.detect-changes.outputs.mesh != 'true'
+      #   run: terraform apply -auto-approve -target=module.gke_clusters
 
-        - name: Diagnosticar falhas conhecidas (add-ons)
-          if: failure()
-          run: |
-              if compgen -G "logs/*.log" > /dev/null; then
-                if grep -qi 'namespaces "istio-system" already exists' logs/*.log; then
-                  printf '%s\n' \
-                    "Foi detectado que o namespace \"istio-system\" já existe no cluster e não está sendo gerenciado pelo Terraform." \
-                    "Importe o recurso para o estado ou limpe-o manualmente antes de tentar novamente."
-                fi
-              else
-                echo "Nenhum log gerado para análise."
+      - name: Diagnosticar falhas conhecidas (add-ons)
+        if: failure()
+        run: |
+            if compgen -G "logs/*.log" > /dev/null; then
+              if grep -qi 'namespaces "istio-system" already exists' logs/*.log; then
+                printf '%s\n' \
+                  "Foi detectado que o namespace \"istio-system\" já existe no cluster e não está sendo gerenciado pelo Terraform." \
+                  "Importe o recurso para o estado ou limpe-o manualmente antes de tentar novamente."
               fi
-        - name: Publicar logs do Terraform (add-ons)
-          if: failure()
-          uses: actions/upload-artifact@v4
-          with:
-            name: terraform-logs-addons
-            path: logs
-            if-no-files-found: ignore
+            else
+              echo "Nenhum log gerado para análise."
+            fi
+      - name: Publicar logs do Terraform (add-ons)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-logs-addons
+          path: logs
+          if-no-files-found: ignore
 
   terraform-destroy:
     runs-on: ubuntu-latest
