@@ -45,10 +45,19 @@ locals {
   istio_gateway_values_yaml = var.install_gateway && length(local.istio_gateway_values) > 0 ? [yamlencode(local.istio_gateway_values)] : []
 }
 
-resource "kubernetes_namespace" "istio_system" {
-  metadata {
-    name   = var.istio_namespace
-    labels = local.istio_namespace_labels
+resource "kubernetes_manifest" "istio_system" {
+  manifest = {
+    apiVersion = "v1"
+    kind       = "Namespace"
+    metadata = {
+      name   = var.istio_namespace
+      labels = local.istio_namespace_labels
+    }
+  }
+
+  field_manager {
+    name            = "terraform"
+    force_conflicts = true
   }
 }
 
@@ -61,7 +70,7 @@ resource "helm_release" "istio_base" {
   create_namespace = false
 
   depends_on = [
-    kubernetes_namespace.istio_system
+    kubernetes_manifest.istio_system
   ]
 }
 
@@ -92,21 +101,30 @@ resource "helm_release" "istio_gateway" {
 
   depends_on = [
     helm_release.istiod,
-    kubernetes_namespace.gateway
+    kubernetes_manifest.gateway
   ]
 }
 
-resource "kubernetes_namespace" "gateway" {
+resource "kubernetes_manifest" "gateway" {
   count = var.install_gateway && var.gateway_namespace != "" && var.gateway_namespace != var.istio_namespace ? 1 : 0
 
-  metadata {
-    name = var.gateway_namespace
-    labels = merge(
-      {
-        "istio.io/rev" = var.asm_revision
-      },
-      var.gateway_namespace_labels
-    )
+  manifest = {
+    apiVersion = "v1"
+    kind       = "Namespace"
+    metadata = {
+      name = var.gateway_namespace
+      labels = merge(
+        {
+          "istio.io/rev" = var.asm_revision
+        },
+        var.gateway_namespace_labels
+      )
+    }
+  }
+
+  field_manager {
+    name            = "terraform"
+    force_conflicts = true
   }
 }
 
