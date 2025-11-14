@@ -164,21 +164,21 @@ jobs:
               body
             });
 
-      - name: Diagnosticar falhas conhecidas (plan)
-        if: failure()
-        run: |
-          if compgen -G "logs/*.log" > /dev/null; then
-            if grep -qi 'namespaces "istio-system" already exists' logs/*.log; then
-              cat <<'EOT'
-              Foi detectado que o namespace "istio-system" já existe no cluster e não está sendo gerenciado pelo Terraform.
-              Opções recomendadas:
-              1. Importe o namespace existente para o estado com o endereço do módulo correspondente (ex.: module.cluster1_addons.kubernetes_manifest.istio_system).
-              2. Ajuste/limpe o namespace manualmente com kubectl antes de nova execução.
-              EOT
+        - name: Diagnosticar falhas conhecidas (plan)
+          if: failure()
+          run: |
+            if compgen -G "logs/*.log" > /dev/null; then
+              if grep -qi 'namespaces "istio-system" already exists' logs/*.log; then
+                cat <<'EOT'
+Foi detectado que o namespace "istio-system" já existe no cluster e não está sendo gerenciado pelo Terraform.
+Opções recomendadas:
+1. Importe o namespace existente para o estado com o endereço do módulo correspondente (ex.: module.cluster1_addons.kubernetes_manifest.istio_system).
+2. Ajuste/limpe o namespace manualmente com kubectl antes de nova execução.
+EOT
+              fi
+            else
+              echo "Nenhum log gerado para análise."
             fi
-          else
-            echo "Nenhum log gerado para análise."
-          fi
 
       - name: Publicar logs do Terraform (plan)
         if: failure()
@@ -264,19 +264,19 @@ jobs:
       #   if: needs.detect-changes.outputs.gke == 'true' && needs.detect-changes.outputs.vpc != 'true' && needs.detect-changes.outputs.mesh != 'true'
       #   run: terraform apply -auto-approve -target=module.gke_clusters
 
-      - name: Diagnosticar falhas conhecidas (apply)
-        if: failure()
-        run: |
-          if compgen -G "logs/*.log" > /dev/null; then
-            if grep -qi 'namespaces "istio-system" already exists' logs/*.log; then
-              cat <<'EOT'
-              Foi detectado que o namespace "istio-system" já existe no cluster e não está sendo gerenciado pelo Terraform.
-              Importe o recurso para o estado ou limpe-o manualmente antes de tentar novamente.
-              EOT
+        - name: Diagnosticar falhas conhecidas (apply)
+          if: failure()
+          run: |
+            if compgen -G "logs/*.log" > /dev/null; then
+              if grep -qi 'namespaces "istio-system" already exists' logs/*.log; then
+                cat <<'EOT'
+Foi detectado que o namespace "istio-system" já existe no cluster e não está sendo gerenciado pelo Terraform.
+Importe o recurso para o estado ou limpe-o manualmente antes de tentar novamente.
+EOT
+              fi
+            else
+              echo "Nenhum log gerado para análise."
             fi
-          else
-            echo "Nenhum log gerado para análise."
-          fi
 
       - name: Publicar logs do Terraform (apply)
         if: failure()
@@ -334,19 +334,19 @@ jobs:
             exit "$DESTROY_EXIT"
           fi
 
-      - name: Diagnosticar falhas conhecidas (destroy)
-        if: failure()
-        run: |
-          if compgen -G "logs/*.log" > /dev/null; then
-            if grep -qi 'namespaces "istio-system" already exists' logs/*.log; then
-              cat <<'EOT'
-              Foi detectado que o namespace "istio-system" já existe no cluster e não está sendo gerenciado pelo Terraform.
-              Importe ou remova o recurso manualmente antes de destruir novamente.
-              EOT
+        - name: Diagnosticar falhas conhecidas (destroy)
+          if: failure()
+          run: |
+            if compgen -G "logs/*.log" > /dev/null; then
+              if grep -qi 'namespaces "istio-system" already exists' logs/*.log; then
+                cat <<'EOT'
+Foi detectado que o namespace "istio-system" já existe no cluster e não está sendo gerenciado pelo Terraform.
+Importe ou remova o recurso manualmente antes de destruir novamente.
+EOT
+              fi
+            else
+              echo "Nenhum log gerado para análise."
             fi
-          else
-            echo "Nenhum log gerado para análise."
-          fi
 
       - name: Publicar logs do Terraform (destroy)
         if: failure()
