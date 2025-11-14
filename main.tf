@@ -129,6 +129,7 @@ provider "helm" {
 }
 
 module "cluster1_addons" {
+  count  = var.enable_cluster_addons ? 1 : 0
   source = "./modules/cluster-addons"
 
   cluster_name                      = local.cluster_addons.cluster1.info.name
@@ -163,6 +164,7 @@ module "cluster1_addons" {
 }
 
 module "cluster2_addons" {
+  count  = var.enable_cluster_addons ? 1 : 0
   source = "./modules/cluster-addons"
 
   cluster_name                      = local.cluster_addons.cluster2.info.name
