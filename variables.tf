@@ -121,3 +121,111 @@ variable "gke_clusters" {
   }
 }
 
+variable "istio_namespace" {
+  description = "Namespace onde o Istio/ASM será instalado"
+  type        = string
+  default     = "istio-system"
+}
+
+variable "gateway_namespace" {
+  description = "Namespace dedicado ao gateway (deixe vazio para usar o mesmo do Istio)"
+  type        = string
+  default     = ""
+}
+
+variable "asm_revision" {
+  description = "Revisão do ASM/Istio aplicada nas labels (ex.: asm-managed)"
+  type        = string
+  default     = "asm-managed"
+}
+
+variable "istio_chart_version" {
+  description = "Versão das charts oficiais do Istio/ASM a serem instaladas"
+  type        = string
+  default     = "1.21.1"
+}
+
+variable "istio_repository" {
+  description = "Repositório Helm com as charts do Istio/ASM"
+  type        = string
+  default     = "https://istio-release.storage.googleapis.com/charts"
+}
+
+variable "istio_gateway_chart" {
+  description = "Nome do chart Helm usado para instalar o gateway"
+  type        = string
+  default     = "gateway"
+}
+
+variable "install_gateway" {
+  description = "Controla a instalação do Istio Ingress Gateway"
+  type        = bool
+  default     = true
+}
+
+variable "additional_istio_namespace_labels" {
+  description = "Labels adicionais para o namespace do Istio"
+  type        = map(string)
+  default     = {}
+}
+
+variable "gateway_namespace_labels" {
+  description = "Labels adicionais para o namespace do gateway"
+  type        = map(string)
+  default     = {}
+}
+
+variable "gateway_labels" {
+  description = "Labels adicionais aplicadas ao deployment do gateway"
+  type        = map(string)
+  default     = {}
+}
+
+variable "istiod_values" {
+  description = "Valores adicionais para o chart Helm do istiod"
+  type        = map(any)
+  default     = {}
+}
+
+variable "istio_gateway_values" {
+  description = "Valores adicionais para o chart Helm do gateway"
+  type        = map(any)
+  default     = {}
+}
+
+variable "install_argocd" {
+  description = "Controla a instalação do ArgoCD em cada cluster"
+  type        = bool
+  default     = true
+}
+
+variable "argocd_namespace" {
+  description = "Namespace onde o ArgoCD será instalado"
+  type        = string
+  default     = "argocd"
+}
+
+variable "argocd_chart_version" {
+  description = "Versão do chart Helm do ArgoCD"
+  type        = string
+  default     = "7.3.6"
+}
+
+variable "argocd_chart" {
+  description = "Nome do chart Helm do ArgoCD"
+  type        = string
+  default     = "argo-cd"
+}
+
+variable "argocd_repository" {
+  description = "Repositório Helm utilizado para instalar o ArgoCD"
+  type        = string
+  default     = "https://argoproj.github.io/argo-helm"
+}
+
+variable "argocd_values" {
+  description = "Valores adicionais para o chart Helm do ArgoCD"
+  type        = map(any)
+  default     = {}
+}
+

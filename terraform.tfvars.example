@@ -76,3 +76,34 @@ gke_clusters = {
   }
 }
 
+# ASM / Istio / Add-ons
+istio_namespace      = "istio-system"
+gateway_namespace    = "istio-ingress"
+asm_revision         = "asm-managed"
+istio_chart_version  = "1.21.1"
+install_gateway      = true
+install_argocd       = true
+argocd_namespace     = "argocd"
+argocd_chart_version = "7.3.6"
+
+# Customizações opcionais
+istiod_values = {
+  meshConfig = {
+    accessLogFile = "/dev/stdout"
+  }
+}
+
+istio_gateway_values = {
+  service = {
+    type = "LoadBalancer"
+  }
+}
+
+argocd_values = {
+  server = {
+    service = {
+      type = "LoadBalancer"
+    }
+  }
+}
+
