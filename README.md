@@ -221,6 +221,15 @@ terraform apply
 >
 > Em execuções subsequentes, um único `terraform apply` já consegue detectar os clusters existentes e criar/atualizar os add-ons normalmente.
 
+### Automação via GitHub Actions
+
+O workflow `Terraform Deploy GKE` já implementa essa estratégia em dois estágios:
+
+- **`terraform-apply-bootstrap`** é executado somente quando o estado remoto ainda não possui os clusters GKE. Ele roda `terraform plan/apply` com `enable_cluster_addons=false` para criar toda a base (VPC, GKE e ASM) sem tentar acessar o Kubernetes.
+- **`terraform-apply-addons`** depende do bootstrap, aguarda os clusters ficarem disponíveis e então roda `terraform plan/apply` com `enable_cluster_addons=true`, aplicando Istio, gateways e ArgoCD.
+
+O job de **plan** detecta automaticamente se os clusters já existem e ajusta a variável `enable_cluster_addons`, evitando planos inconsistentes. Assim, em qualquer push para `main` (ou execução manual `workflow_dispatch`), a pipeline provisiona a infraestrutura e depois instala os add-ons sem precisar de intervenções manuais ou execuções repetidas.
+
 ## 📁 Estrutura do Projeto
 
 ```
