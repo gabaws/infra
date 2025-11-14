@@ -113,6 +113,24 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
+      - name: Detectar disponibilidade dos clusters para add-ons (plan)
+        id: detect-addons-plan
+        run: |
+          set +e
+          terraform state show 'module.gke_clusters.google_container_cluster.clusters["cluster-1"]' >/dev/null 2>&1
+          cluster1=$?
+          terraform state show 'module.gke_clusters.google_container_cluster.clusters["cluster-2"]' >/dev/null 2>&1
+          cluster2=$?
+          set -e
+          if [ "$cluster1" -eq 0 ] && [ "$cluster2" -eq 0 ]; then
+            echo "TF_VAR_enable_cluster_addons=true" >> "$GITHUB_ENV"
+            echo "addons_enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "TF_VAR_enable_cluster_addons=false" >> "$GITHUB_ENV"
+            echo "addons_enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Add-ons desabilitados no plan (clusters ainda não disponíveis)."
+          fi
+
       - name: Terraform Format Check
         run: terraform fmt -check
 
@@ -226,6 +244,24 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
+      - name: Detectar disponibilidade dos clusters para add-ons (apply)
+        id: detect-addons-apply
+        run: |
+          set +e
+          terraform state show 'module.gke_clusters.google_container_cluster.clusters["cluster-1"]' >/dev/null 2>&1
+          cluster1=$?
+          terraform state show 'module.gke_clusters.google_container_cluster.clusters["cluster-2"]' >/dev/null 2>&1
+          cluster2=$?
+          set -e
+          if [ "$cluster1" -eq 0 ] && [ "$cluster2" -eq 0 ]; then
+            echo "TF_VAR_enable_cluster_addons=true" >> "$GITHUB_ENV"
+            echo "addons_enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "TF_VAR_enable_cluster_addons=false" >> "$GITHUB_ENV"
+            echo "addons_enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Clusters ainda não disponíveis para instalar add-ons nesta fase. Será executado um segundo apply após a criação."
+          fi
+
       - name: Terraform Plan
         run: |
           set -o pipefail
@@ -249,6 +285,53 @@ jobs:
           set -e
           if [ "$APPLY_EXIT" -ne 0 ]; then
             echo "Terraform apply falhou." >&2
+            exit "$APPLY_EXIT"
+          fi
+
+      - name: Detectar clusters após o apply (para add-ons)
+        if: steps.detect-addons-apply.outputs.addons_enabled == 'false'
+        id: detect-addons-post
+        run: |
+          set +e
+          terraform state show 'module.gke_clusters.google_container_cluster.clusters["cluster-1"]' >/dev/null 2>&1
+          cluster1=$?
+          terraform state show 'module.gke_clusters.google_container_cluster.clusters["cluster-2"]' >/dev/null 2>&1
+          cluster2=$?
+          set -e
+          if [ "$cluster1" -eq 0 ] && [ "$cluster2" -eq 0 ]; then
+            echo "TF_VAR_enable_cluster_addons=true" >> "$GITHUB_ENV"
+            echo "addons_ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "addons_ready=false" >> "$GITHUB_OUTPUT"
+            echo "Clusters ainda não aparecem no estado após o primeiro apply." >&2
+            exit 1
+          fi
+
+      - name: Terraform Plan (add-ons)
+        if: steps.detect-addons-apply.outputs.addons_enabled == 'false'
+        run: |
+          set -o pipefail
+          set +e
+          mkdir -p logs
+          terraform plan -var enable_cluster_addons=true -no-color -out=tfplan-addons | tee logs/terraform-plan-addons.log
+          PLAN_EXIT=${PIPESTATUS[0]}
+          set -e
+          if [ "$PLAN_EXIT" -eq 1 ]; then
+            echo "Terraform plan (add-ons) falhou." >&2
+            exit 1
+          fi
+
+      - name: Terraform Apply (add-ons)
+        if: steps.detect-addons-apply.outputs.addons_enabled == 'false'
+        run: |
+          set -o pipefail
+          set +e
+          export TF_LOG=ERROR
+          terraform apply -auto-approve tfplan-addons | tee logs/terraform-apply-addons.log
+          APPLY_EXIT=${PIPESTATUS[0]}
+          set -e
+          if [ "$APPLY_EXIT" -ne 0 ]; then
+            echo "Terraform apply (add-ons) falhou." >&2
             exit "$APPLY_EXIT"
           fi
 

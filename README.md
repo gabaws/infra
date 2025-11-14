@@ -207,6 +207,20 @@ terraform plan
 terraform apply
 ```
 
+> 💡 **Primeiro deploy?**  
+> Recursos que dependem de acesso direto ao cluster Kubernetes (Istio/ASM, ArgoCD, gateways) só podem ser instalados depois que os clusters GKE estiverem disponíveis.  
+> Execute em duas etapas:
+>
+> ```bash
+> # Cria rede, clusters e mesh
+> terraform apply -var enable_cluster_addons=false
+>
+> # Depois instala os add-ons (Istio, ArgoCD, etc.)
+> terraform apply -var enable_cluster_addons=true
+> ```
+>
+> Em execuções subsequentes, um único `terraform apply` já consegue detectar os clusters existentes e criar/atualizar os add-ons normalmente.
+
 ## 📁 Estrutura do Projeto
 
 ```

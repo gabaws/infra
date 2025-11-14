@@ -121,6 +121,12 @@ variable "gke_clusters" {
   }
 }
 
+variable "enable_cluster_addons" {
+  description = "When true, installs Kubernetes addons (Istio/ASM, ArgoCD, gateways). Requires clusters to be reachable."
+  type        = bool
+  default     = true
+}
+
 variable "istio_namespace" {
   description = "Namespace onde o Istio/ASM será instalado"
   type        = string

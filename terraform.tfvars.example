@@ -76,6 +76,10 @@ gke_clusters = {
   }
 }
 
+# Controla a instalação dos add-ons (Istio, gateways, ArgoCD).
+# Durante o primeiro deploy execute `terraform apply` duas vezes (false -> true).
+enable_cluster_addons = true
+
 # ASM / Istio / Add-ons
 istio_namespace      = "istio-system"
 gateway_namespace    = "istio-ingress"
