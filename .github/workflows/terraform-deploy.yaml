@@ -72,10 +72,20 @@ jobs:
               - 'outputs.tf'
               - 'versions.tf'
 
-  terraform-plan:
-    needs: detect-changes
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || needs.detect-changes.outputs.vpc == 'true' || needs.detect-changes.outputs.gke == 'true' || needs.detect-changes.outputs.mesh == 'true' || needs.detect-changes.outputs.project == 'true' || needs.detect-changes.outputs.root == 'true'
+    terraform-plan:
+      needs: detect-changes
+      runs-on: ubuntu-latest
+      if: (
+            github.event_name == 'pull_request' ||
+            needs.detect-changes.outputs.vpc == 'true' ||
+            needs.detect-changes.outputs.gke == 'true' ||
+            needs.detect-changes.outputs.mesh == 'true' ||
+            needs.detect-changes.outputs.project == 'true' ||
+            needs.detect-changes.outputs.root == 'true'
+          ) && (
+            github.event_name != 'workflow_dispatch' ||
+            (github.event_name == 'workflow_dispatch' && github.event.inputs.operation != 'destroy')
+          )
     
     steps:
       - name: Checkout repository
