@@ -18,6 +18,7 @@ resource "google_container_cluster" "clusters" {
   name     = each.key
   location = each.value.zone
   project  = var.project_id
+  # Mantém a proteção contra deleção desativada para gerenciamento via Terraform.
   deletion_protection = false
 
   # Remove default node pool
