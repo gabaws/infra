@@ -75,17 +75,24 @@ jobs:
     terraform-plan:
       needs: detect-changes
       runs-on: ubuntu-latest
-      if: (
-            github.event_name == 'pull_request' ||
+      if: >
+        (
+          github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.operation == 'deploy'
+        ) ||
+        (
+          github.event_name == 'pull_request'
+        ) ||
+        (
+          github.event_name != 'workflow_dispatch' &&
+          (
             needs.detect-changes.outputs.vpc == 'true' ||
             needs.detect-changes.outputs.gke == 'true' ||
             needs.detect-changes.outputs.mesh == 'true' ||
             needs.detect-changes.outputs.project == 'true' ||
             needs.detect-changes.outputs.root == 'true'
-          ) && (
-            github.event_name != 'workflow_dispatch' ||
-            (github.event_name == 'workflow_dispatch' && github.event.inputs.operation != 'destroy')
           )
+        )
     
     steps:
       - name: Checkout repository
@@ -117,7 +124,8 @@ jobs:
         run: |
           set -o pipefail
           set +e
-          terraform plan -no-color -out=tfplan | tee tfplan.log
+          mkdir -p logs
+          terraform plan -no-color -out=tfplan | tee logs/terraform-plan.log
           PLAN_EXIT=${PIPESTATUS[0]}
           set -e
           echo "exitcode=$PLAN_EXIT" >> "$GITHUB_OUTPUT"
@@ -156,55 +164,127 @@ jobs:
               body
             });
 
-  terraform-apply:
-    needs: [detect-changes, terraform-plan]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && (needs.detect-changes.outputs.vpc == 'true' || needs.detect-changes.outputs.gke == 'true' || needs.detect-changes.outputs.mesh == 'true' || needs.detect-changes.outputs.project == 'true' || needs.detect-changes.outputs.root == 'true')
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+        - name: Diagnosticar falhas conhecidas (plan)
+          if: failure()
+          run: |
+            if compgen -G "logs/*.log" > /dev/null; then
+              if grep -qi 'namespaces "istio-system" already exists' logs/*.log; then
+                cat <<'EOT'
+                Foi detectado que o namespace "istio-system" já existe no cluster e não está sendo gerenciado pelo Terraform.
+                Opções recomendadas:
+                1. Importe o namespace existente para o estado com o endereço do módulo correspondente (ex.: module.cluster1_addons.kubernetes_manifest.istio_system).
+                2. Ajuste/limpe o namespace manualmente com kubectl antes de nova execução.
+                EOT
+              fi
+            else
+              echo "Nenhum log gerado para análise."
+            fi
+
+        - name: Publicar logs do Terraform (plan)
+          if: failure()
+          uses: actions/upload-artifact@v4
+          with:
+            name: terraform-logs-plan
+            path: logs
+            if-no-files-found: ignore
+
+    terraform-apply:
+      needs: [detect-changes, terraform-plan]
+      runs-on: ubuntu-latest
+      if: >
+        (
+          github.event_name == 'push' &&
+          github.ref == 'refs/heads/main' &&
+          (
+            needs.detect-changes.outputs.vpc == 'true' ||
+            needs.detect-changes.outputs.gke == 'true' ||
+            needs.detect-changes.outputs.mesh == 'true' ||
+            needs.detect-changes.outputs.project == 'true' ||
+            needs.detect-changes.outputs.root == 'true'
+          )
+        ) ||
+        (
+          github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.operation == 'deploy' &&
+          github.ref == 'refs/heads/main'
+        )
       
-      - name: Authenticate to Google Cloud via OIDC
-        id: auth
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: "projects/961330940767/locations/global/workloadIdentityPools/github-actions-pool/providers/github"
-          service_account: "terraform-deployer@infra-474223.iam.gserviceaccount.com"
-      
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.5.0"
-      
-      - name: Terraform Init
-        run: terraform init
-      
-      - name: Terraform Plan
-        run: |
-          set +e
-          terraform plan -no-color -out=tfplan
-          PLAN_EXIT=$?
-          set -e
-          if [ "$PLAN_EXIT" -eq 1 ]; then
-            echo "Terraform plan falhou." >&2
-            exit 1
-          fi
-      
-      - name: Terraform Apply
-        run: |
-          export TF_LOG=ERROR
-          terraform apply -auto-approve tfplan
-      
-      # Opcional: Aplicar apenas recursos específicos baseado em mudanças
-      # Descomente e ajuste conforme necessário
-      # - name: Terraform Apply (Targeted - VPC only)
-      #   if: needs.detect-changes.outputs.vpc == 'true' && needs.detect-changes.outputs.gke != 'true' && needs.detect-changes.outputs.mesh != 'true'
-      #   run: terraform apply -auto-approve -target=module.vpc
-      
-      # - name: Terraform Apply (Targeted - GKE only)
-      #   if: needs.detect-changes.outputs.gke == 'true' && needs.detect-changes.outputs.vpc != 'true' && needs.detect-changes.outputs.mesh != 'true'
-      #   run: terraform apply -auto-approve -target=module.gke_clusters
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+        
+        - name: Authenticate to Google Cloud via OIDC
+          id: auth
+          uses: google-github-actions/auth@v2
+          with:
+            workload_identity_provider: "projects/961330940767/locations/global/workloadIdentityPools/github-actions-pool/providers/github"
+            service_account: "terraform-deployer@infra-474223.iam.gserviceaccount.com"
+        
+        - name: Setup Terraform
+          uses: hashicorp/setup-terraform@v3
+          with:
+            terraform_version: "1.5.0"
+        
+        - name: Terraform Init
+          run: terraform init
+        
+        - name: Terraform Plan
+          run: |
+            set -o pipefail
+            set +e
+            mkdir -p logs
+            terraform plan -no-color -out=tfplan | tee logs/terraform-plan-apply.log
+            PLAN_EXIT=${PIPESTATUS[0]}
+            set -e
+            if [ "$PLAN_EXIT" -eq 1 ]; then
+              echo "Terraform plan falhou." >&2
+              exit 1
+            fi
+        
+        - name: Terraform Apply
+          run: |
+            set -o pipefail
+            set +e
+            export TF_LOG=ERROR
+            terraform apply -auto-approve tfplan | tee logs/terraform-apply.log
+            APPLY_EXIT=${PIPESTATUS[0]}
+            set -e
+            if [ "$APPLY_EXIT" -ne 0 ]; then
+              echo "Terraform apply falhou." >&2
+              exit "$APPLY_EXIT"
+            fi
+        
+        # Opcional: Aplicar apenas recursos específicos baseado em mudanças
+        # Descomente e ajuste conforme necessário
+        # - name: Terraform Apply (Targeted - VPC only)
+        #   if: needs.detect-changes.outputs.vpc == 'true' && needs.detect-changes.outputs.gke != 'true' && needs.detect-changes.outputs.mesh != 'true'
+        #   run: terraform apply -auto-approve -target=module.vpc
+        
+        # - name: Terraform Apply (Targeted - GKE only)
+        #   if: needs.detect-changes.outputs.gke == 'true' && needs.detect-changes.outputs.vpc != 'true' && needs.detect-changes.outputs.mesh != 'true'
+        #   run: terraform apply -auto-approve -target=module.gke_clusters
+
+        - name: Diagnosticar falhas conhecidas (apply)
+          if: failure()
+          run: |
+            if compgen -G "logs/*.log" > /dev/null; then
+              if grep -qi 'namespaces "istio-system" already exists' logs/*.log; then
+                cat <<'EOT'
+                Foi detectado que o namespace "istio-system" já existe no cluster e não está sendo gerenciado pelo Terraform.
+                Importe o recurso para o estado ou limpe-o manualmente antes de tentar novamente.
+                EOT
+              fi
+            else
+              echo "Nenhum log gerado para análise."
+            fi
+
+        - name: Publicar logs do Terraform (apply)
+          if: failure()
+          uses: actions/upload-artifact@v4
+          with:
+            name: terraform-logs-apply
+            path: logs
+            if-no-files-found: ignore
 
   terraform-destroy:
     runs-on: ubuntu-latest
@@ -230,8 +310,49 @@ jobs:
         run: terraform init
 
       - name: Terraform Plan Destroy
-        run: terraform plan -destroy -no-color
+        run: |
+          set -o pipefail
+          set +e
+          mkdir -p logs
+          terraform plan -destroy -no-color | tee logs/terraform-destroy-plan.log
+          PLAN_EXIT=${PIPESTATUS[0]}
+          set -e
+          if [ "$PLAN_EXIT" -eq 1 ]; then
+            echo "Terraform plan destroy falhou." >&2
+            exit 1
+          fi
 
       - name: Terraform Destroy
-        run: terraform destroy -auto-approve
+        run: |
+          set -o pipefail
+          set +e
+          terraform destroy -auto-approve | tee logs/terraform-destroy.log
+          DESTROY_EXIT=${PIPESTATUS[0]}
+          set -e
+          if [ "$DESTROY_EXIT" -ne 0 ]; then
+            echo "Terraform destroy falhou." >&2
+            exit "$DESTROY_EXIT"
+          fi
+
+      - name: Diagnosticar falhas conhecidas (destroy)
+        if: failure()
+        run: |
+          if compgen -G "logs/*.log" > /dev/null; then
+            if grep -qi 'namespaces "istio-system" already exists' logs/*.log; then
+              cat <<'EOT'
+              Foi detectado que o namespace "istio-system" já existe no cluster e não está sendo gerenciado pelo Terraform.
+              Importe ou remova o recurso manualmente antes de destruir novamente.
+              EOT
+            fi
+          else
+            echo "Nenhum log gerado para análise."
+          fi
+
+      - name: Publicar logs do Terraform (destroy)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-logs-destroy
+          path: logs
+          if-no-files-found: ignore
 
