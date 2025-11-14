@@ -18,6 +18,7 @@ resource "google_container_cluster" "clusters" {
   name     = each.key
   location = each.value.zone
   project  = var.project_id
+  deletion_protection = false
 
   # Remove default node pool
   remove_default_node_pool = true
