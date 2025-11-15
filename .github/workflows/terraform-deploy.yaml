@@ -1,4 +1,4 @@
-name: "Terraform Deploy GKE"
+name: "Terraform GKE - Deploy/Destroy"
 
 on:
   push:
