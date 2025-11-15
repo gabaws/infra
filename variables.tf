@@ -76,6 +76,24 @@ variable "secondary_ranges" {
   }
 }
 
+variable "primary_cluster_name" {
+  description = "Nome lógico do cluster principal (receberá ArgoCD e fluxos de orquestração)"
+  type        = string
+  default     = "master-engine"
+}
+
+variable "secondary_cluster_name" {
+  description = "Nome lógico do segundo cluster (foco em workloads de aplicação)"
+  type        = string
+  default     = "app-engine"
+}
+
+variable "argocd_target_cluster" {
+  description = "Nome do cluster onde o ArgoCD será instalado"
+  type        = string
+  default     = "master-engine"
+}
+
 variable "gke_clusters" {
   description = "Configuration for GKE clusters"
   type = map(object({
@@ -94,7 +112,7 @@ variable "gke_clusters" {
     })), [])
   }))
   default = {
-    cluster-1 = {
+    master-engine = {
       region                     = "us-central1"
       zone                       = "us-central1-a"
       initial_node_count         = 1
@@ -106,7 +124,7 @@ variable "gke_clusters" {
       enable_private_endpoint    = false
       master_authorized_networks = []
     }
-    cluster-2 = {
+    app-engine = {
       region                     = "us-east1"
       zone                       = "us-east1-b"
       initial_node_count         = 1
@@ -124,7 +142,7 @@ variable "gke_clusters" {
 variable "enable_cluster_addons" {
   description = "When true, installs Kubernetes addons (Istio/ASM, ArgoCD, gateways). Requires clusters to be reachable."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "istio_namespace" {

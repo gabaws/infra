@@ -185,10 +185,11 @@ cp terraform.tfvars.example terraform.tfvars
 Edite `terraform.tfvars` com suas informações:
 
 ```hcl
-project_name        = "meu-projeto-gke"
-org_id              = "123456789012"
-billing_account_id  = "01ABCD-2EFGH3-4IJKL5"
-folder_id           = "987654321098"  # Opcional
+project_id             = "infra-474223"
+region                 = "us-central1"
+primary_cluster_name   = "master-engine"
+secondary_cluster_name = "app-engine"
+argocd_target_cluster  = "master-engine"
 ```
 
 ### 3. Inicializar Terraform
@@ -220,6 +221,15 @@ terraform apply
 > ```
 >
 > Em execuções subsequentes, um único `terraform apply` já consegue detectar os clusters existentes e criar/atualizar os add-ons normalmente.
+
+### Automação via GitHub Actions
+
+O workflow `Terraform Deploy GKE` já implementa essa estratégia em dois estágios:
+
+- **`terraform-apply-bootstrap`** é executado somente quando o estado remoto ainda não possui os clusters GKE. Ele roda `terraform plan/apply` com `enable_cluster_addons=false` para criar toda a base (VPC, GKE e ASM) sem tentar acessar o Kubernetes.
+- **`terraform-apply-addons`** depende do bootstrap, aguarda os clusters ficarem disponíveis e então roda `terraform plan/apply` com `enable_cluster_addons=true`, aplicando Istio, gateways e ArgoCD.
+
+O job de **plan** detecta automaticamente se os clusters já existem e ajusta a variável `enable_cluster_addons`, evitando planos inconsistentes. Assim, em qualquer push para `main` (ou execução manual `workflow_dispatch`), a pipeline provisiona a infraestrutura e depois instala os add-ons sem precisar de intervenções manuais ou execuções repetidas.
 
 ## 📁 Estrutura do Projeto
 
@@ -257,7 +267,7 @@ Edite a variável `gke_clusters` em `terraform.tfvars`:
 
 ```hcl
 gke_clusters = {
-  cluster-1 = {
+  master-engine = {
     region                = "us-central1"
     zone                  = "us-central1-a"
     initial_node_count    = 2
@@ -268,9 +278,24 @@ gke_clusters = {
     enable_private_nodes  = true
     enable_private_endpoint = false
   }
-  # ...
+  app-engine = {
+    region                = "us-east1"
+    zone                  = "us-east1-b"
+    initial_node_count    = 2
+    min_node_count        = 1
+    max_node_count        = 10
+    machine_type          = "e2-standard-4"
+    disk_size_gb          = 100
+    enable_private_nodes  = true
+    enable_private_endpoint = false
+  }
 }
 ```
+
+> ⚙️ Use as variáveis `primary_cluster_name`, `secondary_cluster_name` e `argocd_target_cluster`
+> para indicar qual cluster é o “master” (recebe o ArgoCD) e qual ficará responsável
+> apenas por workloads. Por padrão `master-engine` hospeda o ArgoCD e `app-engine`
+> participa da mesma malha, mas sem ArgoCD.
 
 ### Configurar Master Authorized Networks
 
@@ -321,7 +346,7 @@ Caso a rede já exista no projeto (por exemplo, ambientes compartilhados), defin
 
 - `istio_chart_version`, `asm_revision`, `istiod_values` e `istio_gateway_values` controlam a instalação do Istio (base, istiod e ingress gateway) via Helm em todos os clusters.
 - `install_gateway`, `gateway_namespace` e `gateway_labels` permitem habilitar/desabilitar o gateway e customizar namespace/labels.
-- `install_argocd`, `argocd_chart_version`, `argocd_values` definem a instalação do ArgoCD por cluster.
+- `install_argocd`, `argocd_chart_version`, `argocd_values` definem a instalação do ArgoCD. Use `argocd_target_cluster` para apontar qual cluster recebe o Argo (por padrão, `master-engine`).
 - Para adicionar novos clusters é necessário criar provedores `kubernetes`/`helm` com aliases adicionais em `main.tf` e instanciar o módulo `cluster-addons` correspondente.
 
 ## 📊 Outputs
@@ -363,11 +388,11 @@ terraform output anthos_service_mesh_status
 Após o deploy, você pode testar a comunicação entre clusters usando o Service Mesh:
 
 ```bash
-# Conectar ao cluster 1
-gcloud container clusters get-credentials cluster-1 --zone us-central1-a --project $(terraform output -raw project_id)
+# Conectar ao cluster master (master-engine)
+gcloud container clusters get-credentials master-engine --zone us-central1-a --project $(terraform output -raw project_id)
 
-# Conectar ao cluster 2
-gcloud container clusters get-credentials cluster-2 --zone us-east1-b --project $(terraform output -raw project_id)
+# Conectar ao cluster de aplicações (app-engine)
+gcloud container clusters get-credentials app-engine --zone us-east1-b --project $(terraform output -raw project_id)
 
 # Verificar o Service Mesh
 kubectl get servicemesh -A

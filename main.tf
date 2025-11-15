@@ -85,54 +85,54 @@ module "anthos_service_mesh" {
 
 locals {
   cluster_addons = {
-    cluster1 = {
-      name = "cluster-1"
-      info = module.gke_clusters.cluster_info["cluster-1"]
+    master = {
+      name = var.primary_cluster_name
+      info = module.gke_clusters.cluster_info[var.primary_cluster_name]
     }
-    cluster2 = {
-      name = "cluster-2"
-      info = module.gke_clusters.cluster_info["cluster-2"]
+    app = {
+      name = var.secondary_cluster_name
+      info = module.gke_clusters.cluster_info[var.secondary_cluster_name]
     }
   }
 }
 
 provider "kubernetes" {
-  alias                  = "cluster1"
-  host                   = "https://${local.cluster_addons.cluster1.info.endpoint}"
-  cluster_ca_certificate = base64decode(local.cluster_addons.cluster1.info.cluster_ca_certificate)
+  alias                  = "master"
+  host                   = "https://${local.cluster_addons.master.info.endpoint}"
+  cluster_ca_certificate = base64decode(local.cluster_addons.master.info.cluster_ca_certificate)
   token                  = data.google_client_config.default.access_token
 }
 
 provider "kubernetes" {
-  alias                  = "cluster2"
-  host                   = "https://${local.cluster_addons.cluster2.info.endpoint}"
-  cluster_ca_certificate = base64decode(local.cluster_addons.cluster2.info.cluster_ca_certificate)
+  alias                  = "app"
+  host                   = "https://${local.cluster_addons.app.info.endpoint}"
+  cluster_ca_certificate = base64decode(local.cluster_addons.app.info.cluster_ca_certificate)
   token                  = data.google_client_config.default.access_token
 }
 
 provider "helm" {
-  alias = "cluster1"
+  alias = "master"
   kubernetes = {
-    host                   = "https://${local.cluster_addons.cluster1.info.endpoint}"
-    cluster_ca_certificate = base64decode(local.cluster_addons.cluster1.info.cluster_ca_certificate)
+    host                   = "https://${local.cluster_addons.master.info.endpoint}"
+    cluster_ca_certificate = base64decode(local.cluster_addons.master.info.cluster_ca_certificate)
     token                  = data.google_client_config.default.access_token
   }
 }
 
 provider "helm" {
-  alias = "cluster2"
+  alias = "app"
   kubernetes = {
-    host                   = "https://${local.cluster_addons.cluster2.info.endpoint}"
-    cluster_ca_certificate = base64decode(local.cluster_addons.cluster2.info.cluster_ca_certificate)
+    host                   = "https://${local.cluster_addons.app.info.endpoint}"
+    cluster_ca_certificate = base64decode(local.cluster_addons.app.info.cluster_ca_certificate)
     token                  = data.google_client_config.default.access_token
   }
 }
 
-module "cluster1_addons" {
+module "master_cluster_addons" {
   count  = var.enable_cluster_addons ? 1 : 0
   source = "./modules/cluster-addons"
 
-  cluster_name                      = local.cluster_addons.cluster1.info.name
+  cluster_name                      = local.cluster_addons.master.info.name
   istio_namespace                   = var.istio_namespace
   asm_revision                      = var.asm_revision
   istio_chart_version               = var.istio_chart_version
@@ -144,7 +144,7 @@ module "cluster1_addons" {
   additional_istio_namespace_labels = var.additional_istio_namespace_labels
   gateway_namespace_labels          = var.gateway_namespace_labels
   gateway_labels                    = var.gateway_labels
-  install_argocd                    = var.install_argocd
+  install_argocd                    = var.install_argocd && local.cluster_addons.master.name == var.argocd_target_cluster
   argocd_chart_version              = var.argocd_chart_version
   argocd_namespace                  = var.argocd_namespace
   argocd_values                     = var.argocd_values
@@ -153,8 +153,8 @@ module "cluster1_addons" {
   istio_repository                  = var.istio_repository
 
   providers = {
-    kubernetes = kubernetes.cluster1
-    helm       = helm.cluster1
+    kubernetes = kubernetes.master
+    helm       = helm.master
   }
 
   depends_on = [
@@ -163,11 +163,11 @@ module "cluster1_addons" {
   ]
 }
 
-module "cluster2_addons" {
+module "app_cluster_addons" {
   count  = var.enable_cluster_addons ? 1 : 0
   source = "./modules/cluster-addons"
 
-  cluster_name                      = local.cluster_addons.cluster2.info.name
+  cluster_name                      = local.cluster_addons.app.info.name
   istio_namespace                   = var.istio_namespace
   asm_revision                      = var.asm_revision
   istio_chart_version               = var.istio_chart_version
@@ -179,7 +179,7 @@ module "cluster2_addons" {
   additional_istio_namespace_labels = var.additional_istio_namespace_labels
   gateway_namespace_labels          = var.gateway_namespace_labels
   gateway_labels                    = var.gateway_labels
-  install_argocd                    = var.install_argocd
+  install_argocd                    = var.install_argocd && local.cluster_addons.app.name == var.argocd_target_cluster
   argocd_chart_version              = var.argocd_chart_version
   argocd_namespace                  = var.argocd_namespace
   argocd_values                     = var.argocd_values
@@ -188,8 +188,8 @@ module "cluster2_addons" {
   istio_repository                  = var.istio_repository
 
   providers = {
-    kubernetes = kubernetes.cluster2
-    helm       = helm.cluster2
+    kubernetes = kubernetes.app
+    helm       = helm.app
   }
 
   depends_on = [

@@ -1,8 +1,11 @@
 # Project Configuration
 project_id = "infra-474223"  # Existing GCP project ID
 
-# Region Configuration
-region = "us-central1"
+# Region / Cluster Logical Names
+region                 = "us-central1"
+primary_cluster_name   = "master-engine"
+secondary_cluster_name = "app-engine"
+argocd_target_cluster  = "master-engine"
 
 # VPC Configuration
 network_name = "main-vpc"
@@ -50,7 +53,7 @@ secondary_ranges = {
 
 # GKE Clusters Configuration
 gke_clusters = {
-  cluster-1 = {
+  master-engine = {
     region                = "us-central1"
     zone                  = "us-central1-a"
     initial_node_count    = 1
@@ -62,7 +65,7 @@ gke_clusters = {
     enable_private_endpoint = false
     master_authorized_networks = []  # Add CIDR blocks if needed for private endpoint access
   }
-  cluster-2 = {
+  app-engine = {
     region                = "us-east1"
     zone                  = "us-east1-b"
     initial_node_count    = 1
@@ -77,8 +80,10 @@ gke_clusters = {
 }
 
 # Controla a instalação dos add-ons (Istio, gateways, ArgoCD).
-# Durante o primeiro deploy execute `terraform apply` duas vezes (false -> true).
-enable_cluster_addons = true
+# Fluxo sugerido:
+# 1) terraform apply -var enable_cluster_addons=false
+# 2) terraform apply -var enable_cluster_addons=true
+enable_cluster_addons = false
 
 # ASM / Istio / Add-ons
 istio_namespace      = "istio-system"
