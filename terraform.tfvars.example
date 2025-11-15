@@ -86,8 +86,9 @@ gke_clusters = {
 enable_cluster_addons = false
 
 # ASM / Istio / Add-ons
-istio_namespace      = "istio-system"
-gateway_namespace    = "istio-ingress"
+istio_namespace          = "istio-system"
+manage_istio_namespace   = false  # Defina true caso deseje que o Terraform crie/gerencie o namespace
+gateway_namespace        = "istio-ingress"
 asm_revision         = "asm-managed"
 istio_chart_version  = "1.21.1"
 install_gateway      = true

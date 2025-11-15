@@ -9,6 +9,12 @@ variable "istio_namespace" {
   default     = "istio-system"
 }
 
+variable "manage_istio_namespace" {
+  description = "Quando true, o módulo cria/atualiza o namespace do Istio antes dos charts"
+  type        = bool
+  default     = true
+}
+
 variable "asm_revision" {
   description = "Revisão do ASM/Istio a ser aplicada (ex.: asm-managed)"
   type        = string

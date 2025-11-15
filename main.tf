@@ -134,6 +134,7 @@ module "master_cluster_addons" {
 
   cluster_name                      = local.cluster_addons.master.info.name
   istio_namespace                   = var.istio_namespace
+  manage_istio_namespace            = var.manage_istio_namespace
   asm_revision                      = var.asm_revision
   istio_chart_version               = var.istio_chart_version
   istiod_values                     = var.istiod_values
@@ -169,6 +170,7 @@ module "app_cluster_addons" {
 
   cluster_name                      = local.cluster_addons.app.info.name
   istio_namespace                   = var.istio_namespace
+  manage_istio_namespace            = var.manage_istio_namespace
   asm_revision                      = var.asm_revision
   istio_chart_version               = var.istio_chart_version
   istiod_values                     = var.istiod_values

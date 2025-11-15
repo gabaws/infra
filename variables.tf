@@ -151,6 +151,12 @@ variable "istio_namespace" {
   default     = "istio-system"
 }
 
+variable "manage_istio_namespace" {
+  description = "Quando true, o Terraform cria/atualiza o namespace do Istio antes dos charts. Defina como false se o namespace já é gerenciado por outro processo (ex.: Anthos Service Mesh)."
+  type        = bool
+  default     = true
+}
+
 variable "gateway_namespace" {
   description = "Namespace dedicado ao gateway (deixe vazio para usar o mesmo do Istio)"
   type        = string

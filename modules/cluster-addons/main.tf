@@ -46,6 +46,8 @@ locals {
 }
 
 resource "kubernetes_manifest" "istio_system" {
+  count = var.manage_istio_namespace ? 1 : 0
+
   manifest = {
     apiVersion = "v1"
     kind       = "Namespace"
@@ -67,11 +69,7 @@ resource "helm_release" "istio_base" {
   chart            = "base"
   namespace        = var.istio_namespace
   version          = var.istio_chart_version
-  create_namespace = false
-
-  depends_on = [
-    kubernetes_manifest.istio_system
-  ]
+  create_namespace = var.manage_istio_namespace ? false : true
 }
 
 resource "helm_release" "istiod" {

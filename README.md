@@ -347,6 +347,7 @@ Caso a rede já exista no projeto (por exemplo, ambientes compartilhados), defin
 - `istio_chart_version`, `asm_revision`, `istiod_values` e `istio_gateway_values` controlam a instalação do Istio (base, istiod e ingress gateway) via Helm em todos os clusters.
 - `install_gateway`, `gateway_namespace` e `gateway_labels` permitem habilitar/desabilitar o gateway e customizar namespace/labels.
 - `install_argocd`, `argocd_chart_version`, `argocd_values` definem a instalação do ArgoCD. Use `argocd_target_cluster` para apontar qual cluster recebe o Argo (por padrão, `master-engine`).
+- `manage_istio_namespace` controla se o Terraform deve criar/atualizar o namespace `istio-system`. Defina como `false` quando o namespace já é provisionado automaticamente pelo Anthos Service Mesh, evitando erros de “resource already exists” nos pipelines.
 - Para adicionar novos clusters é necessário criar provedores `kubernetes`/`helm` com aliases adicionais em `main.tf` e instanciar o módulo `cluster-addons` correspondente.
 
 ## 📊 Outputs
