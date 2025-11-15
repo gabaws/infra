@@ -1,29 +1,29 @@
 variable "project_id" {
-  description = "The GCP project ID to use (existing project)"
+  description = "ID do projeto GCP que será usado (projeto existente)"
   type        = string
   default     = "infra-474223"
 }
 
 variable "region" {
-  description = "The default region for resources"
+  description = "Região padrão onde os recursos serão provisionados"
   type        = string
   default     = "us-central1"
 }
 
 variable "network_name" {
-  description = "Name of the VPC network"
+  description = "Nome da rede VPC"
   type        = string
   default     = "main-vpc"
 }
 
 variable "manage_network" {
-  description = "When false, reuse an existing VPC network instead of creating it"
+  description = "Quando false, reaproveita uma VPC existente em vez de criar outra"
   type        = bool
   default     = true
 }
 
 variable "subnets" {
-  description = "List of subnets to create"
+  description = "Lista de sub-redes que serão criadas"
   type = list(object({
     name          = string
     ip_cidr_range = string
@@ -35,19 +35,19 @@ variable "subnets" {
       name          = "subnet-us-central1"
       ip_cidr_range = "10.0.1.0/24"
       region        = "us-central1"
-      description   = "Subnet for us-central1 region"
+      description   = "Subnet para a região us-central1"
     },
     {
       name          = "subnet-us-east1"
       ip_cidr_range = "10.0.2.0/24"
       region        = "us-east1"
-      description   = "Subnet for us-east1 region"
+      description   = "Subnet para a região us-east1"
     }
   ]
 }
 
 variable "secondary_ranges" {
-  description = "Secondary IP ranges for GKE pods and services"
+  description = "Faixas secundárias de IP usadas pelos pods e serviços do GKE"
   type = map(list(object({
     range_name    = string
     ip_cidr_range = string
@@ -95,7 +95,7 @@ variable "argocd_target_cluster" {
 }
 
 variable "gke_clusters" {
-  description = "Configuration for GKE clusters"
+  description = "Mapa com as configurações de cada cluster GKE"
   type = map(object({
     region                  = string
     zone                    = string
@@ -140,7 +140,7 @@ variable "gke_clusters" {
 }
 
 variable "enable_cluster_addons" {
-  description = "When true, installs Kubernetes addons (Istio/ASM, ArgoCD, gateways). Requires clusters to be reachable."
+  description = "Quando true, instala os add-ons Kubernetes (Istio/ASM, gateways e ArgoCD). Requer clusters já acessíveis."
   type        = bool
   default     = false
 }

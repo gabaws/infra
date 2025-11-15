@@ -1,21 +1,21 @@
 variable "bootstrap_project_id" {
-  description = "Project ID where the state bucket will be created"
+  description = "ID do projeto onde o bucket de estado será criado"
   type        = string
 }
 
 variable "bucket_name" {
-  description = "Name of the GCS bucket for Terraform state"
+  description = "Nome do bucket GCS que armazenará o estado do Terraform"
   type        = string
 }
 
 variable "bucket_location" {
-  description = "Location of the GCS bucket"
+  description = "Localização/região do bucket GCS"
   type        = string
   default     = "US"
 }
 
 variable "region" {
-  description = "Default region"
+  description = "Região padrão usada pelo provider ao criar o bucket"
   type        = string
   default     = "us-central1"
 }

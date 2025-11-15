@@ -1,15 +1,15 @@
 variable "project_id" {
-  description = "The GCP project ID"
+  description = "ID do projeto GCP onde o ASM será configurado"
   type        = string
 }
 
 variable "region" {
-  description = "The default region for resources"
+  description = "Região padrão (usada apenas para consistência)"
   type        = string
 }
 
 variable "clusters" {
-  description = "Information about GKE clusters to register with Anthos Service Mesh"
+  description = "Informações mínimas dos clusters GKE que serão registrados no Anthos Service Mesh"
   type = map(object({
     name     = string
     location = string

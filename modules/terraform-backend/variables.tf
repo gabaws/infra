@@ -1,51 +1,51 @@
 variable "project_id" {
-  description = "The GCP project ID where the bucket will be created"
+  description = "ID do projeto GCP onde o bucket será criado"
   type        = string
 }
 
 variable "bucket_name" {
-  description = "Name of the GCS bucket for Terraform state"
+  description = "Nome do bucket GCS que armazenará o estado do Terraform"
   type        = string
 }
 
 variable "bucket_location" {
-  description = "Location of the GCS bucket"
+  description = "Localização do bucket GCS"
   type        = string
   default     = "US"
 }
 
 variable "force_destroy" {
-  description = "When deleting a bucket, this boolean option will delete all contained objects"
+  description = "Quando true, remove todos os objetos ao destruir o bucket"
   type        = bool
   default     = false
 }
 
 variable "num_newer_versions" {
-  description = "Number of versions to keep for state files"
+  description = "Quantidade de versões que devem ser mantidas para os arquivos de estado"
   type        = number
   default     = 5
 }
 
 variable "kms_key_name" {
-  description = "KMS key name for bucket encryption (optional)"
+  description = "Nome da chave KMS usada na criptografia do bucket (opcional)"
   type        = string
   default     = null
 }
 
 variable "admins" {
-  description = "List of IAM members with admin access to the bucket"
+  description = "Lista de membros IAM com acesso administrativo ao bucket"
   type        = list(string)
   default     = []
 }
 
 variable "readers" {
-  description = "List of IAM members with read access to the bucket"
+  description = "Lista de membros IAM com acesso somente leitura ao bucket"
   type        = list(string)
   default     = []
 }
 
 variable "labels" {
-  description = "Labels to apply to the bucket"
+  description = "Labels aplicadas ao bucket"
   type        = map(string)
   default = {
     managed-by = "terraform"

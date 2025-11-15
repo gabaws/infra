@@ -1,26 +1,26 @@
 variable "project_id" {
-  description = "The GCP project ID"
+  description = "ID do projeto GCP onde a VPC será criada"
   type        = string
 }
 
 variable "network_name" {
-  description = "Name of the VPC network"
+  description = "Nome da rede VPC"
   type        = string
 }
 
 variable "manage_network" {
-  description = "When false, reuse an existing VPC network with the provided name instead of creating it"
+  description = "Quando false, reutiliza a VPC informada em vez de criar uma nova"
   type        = bool
   default     = true
 }
 
 variable "region" {
-  description = "Default region for resources"
+  description = "Região padrão usada nos recursos auxiliares (ex.: Cloud NAT)"
   type        = string
 }
 
 variable "subnets" {
-  description = "List of subnets to create"
+  description = "Lista de sub-redes que serão criadas"
   type = list(object({
     name          = string
     ip_cidr_range = string
@@ -30,7 +30,7 @@ variable "subnets" {
 }
 
 variable "secondary_ranges" {
-  description = "Secondary IP ranges for GKE pods and services"
+  description = "Faixas secundárias de IP usadas por pods/serviços GKE"
   type = map(list(object({
     range_name    = string
     ip_cidr_range = string
@@ -39,25 +39,25 @@ variable "secondary_ranges" {
 }
 
 variable "enable_private_google_access" {
-  description = "Enable private Google access for subnets"
+  description = "Ativa o Private Google Access nas sub-redes"
   type        = bool
   default     = true
 }
 
 variable "enable_cloud_nat" {
-  description = "Enable Cloud NAT for private subnets"
+  description = "Ativa Cloud NAT para sub-redes privadas"
   type        = bool
   default     = true
 }
 
 variable "enable_ssh" {
-  description = "Enable SSH access (for debugging)"
+  description = "Habilita regra de firewall para SSH (uso emergencial)"
   type        = bool
   default     = false
 }
 
 variable "ssh_source_ranges" {
-  description = "Source IP ranges for SSH access"
+  description = "CIDRs de origem autorizados a usar SSH"
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }

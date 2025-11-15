@@ -1,20 +1,20 @@
 variable "project_id" {
-  description = "The GCP project ID"
+  description = "ID do projeto GCP onde os clusters serão criados"
   type        = string
 }
 
 variable "region" {
-  description = "The default region for resources"
+  description = "Região padrão usada nas configurações compartilhadas"
   type        = string
 }
 
 variable "network" {
-  description = "The VPC network name"
+  description = "Nome da rede VPC utilizada pelos clusters"
   type        = string
 }
 
 variable "subnets" {
-  description = "Map of subnets with their configurations"
+  description = "Mapa das sub-redes já resolvidas (nome, região, ranges secundários)"
   type = map(object({
     name          = string
     ip_cidr_range = string
@@ -28,7 +28,7 @@ variable "subnets" {
 }
 
 variable "clusters" {
-  description = "Configuration for GKE clusters"
+  description = "Mapa com os parâmetros de cada cluster GKE"
   type = map(object({
     region                  = string
     zone                    = string
