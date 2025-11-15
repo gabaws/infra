@@ -119,9 +119,9 @@ jobs:
         id: detect-clusters
         run: |
           set +e
-          terraform state show 'module.gke_clusters.google_container_cluster.clusters["cluster-1"]' >/dev/null 2>&1
+          terraform state show 'module.gke_clusters.google_container_cluster.clusters["master-engine"]' >/dev/null 2>&1
           cluster1=$?
-          terraform state show 'module.gke_clusters.google_container_cluster.clusters["cluster-2"]' >/dev/null 2>&1
+          terraform state show 'module.gke_clusters.google_container_cluster.clusters["app-engine"]' >/dev/null 2>&1
           cluster2=$?
           set -e
           if [ "$cluster1" -eq 0 ] && [ "$cluster2" -eq 0 ]; then
@@ -353,9 +353,9 @@ jobs:
         id: ensure-clusters
         run: |
           set +e
-          terraform state show 'module.gke_clusters.google_container_cluster.clusters["cluster-1"]' >/dev/null 2>&1
+          terraform state show 'module.gke_clusters.google_container_cluster.clusters["master-engine"]' >/dev/null 2>&1
           cluster1=$?
-          terraform state show 'module.gke_clusters.google_container_cluster.clusters["cluster-2"]' >/dev/null 2>&1
+          terraform state show 'module.gke_clusters.google_container_cluster.clusters["app-engine"]' >/dev/null 2>&1
           cluster2=$?
           set -e
           if [ "$cluster1" -eq 0 ] && [ "$cluster2" -eq 0 ]; then
