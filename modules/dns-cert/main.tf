@@ -7,10 +7,6 @@ terraform {
   }
 }
 
-provider "google" {
-  project = var.project_id
-}
-
 # Zona pública do Cloud DNS
 resource "google_dns_managed_zone" "public_zone" {
   name        = "public-zone-${replace(var.domain_name, ".", "-")}"
