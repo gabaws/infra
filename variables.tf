@@ -259,6 +259,17 @@ variable "argocd_values" {
   default     = {}
 }
 
+variable "create_argocd_gateway" {
+  description = "Cria um Gateway/HTTPRoute (Gateway API) para expor o ArgoCD no cluster master quando install_argocd=true"
+  type        = bool
+  default     = false
+}
+
+variable "argocd_host" {
+  description = "Host (FQDN) opcional para o Gateway do ArgoCD. Deixe vazio para aceitar qualquer host (teste via IP)."
+  type        = string
+  default     = ""
+}
 variable "helm_release_timeout" {
   description = "Tempo (em segundos) para aguardar a conclusão de cada helm_release"
   type        = number
@@ -271,3 +282,8 @@ variable "helm_wait" {
   default     = false
 }
 
+variable "domain_name" {
+  description = "Domínio raiz gerenciado no Cloud DNS (ex.: cloudab.online)"
+  type        = string
+  default     = "cloudab.online"
+}

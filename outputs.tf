@@ -41,3 +41,12 @@ output "cluster_endpoints" {
   sensitive = true
 }
 
+output "dns_nameservers" {
+  description = "Nameservers do Cloud DNS da zona pública (aponte no GoDaddy)"
+  value       = try(module.dns_and_cert.nameservers, [])
+}
+
+output "certificate_manager_certificate" {
+  description = "Identificador do certificado gerenciado (wildcard)"
+  value       = try(module.dns_and_cert.certificate_name, null)
+}

@@ -18,11 +18,16 @@ resource "google_project_service" "required_apis" {
     "container.googleapis.com",
     "gkehub.googleapis.com",
     "mesh.googleapis.com",
+    "dns.googleapis.com",
+    "certificatemanager.googleapis.com",
     "servicenetworking.googleapis.com",
     "cloudresourcemanager.googleapis.com",
     "iam.googleapis.com",
     "logging.googleapis.com",
     "monitoring.googleapis.com",
+    "networkservices.googleapis.com",
+    "networksecurity.googleapis.com",
+    "trafficdirector.googleapis.com",
   ])
 
   project = var.project_id
@@ -81,6 +86,16 @@ module "anthos_service_mesh" {
     google_project_service.required_apis,
     module.gke_clusters
   ]
+}
+
+# DNS público + Certificado gerenciado (wildcard) para o domínio raiz
+module "dns_and_cert" {
+  source = "./modules/dns-cert"
+
+  project_id  = var.project_id
+  domain_name = var.domain_name
+
+  depends_on = [google_project_service.required_apis]
 }
 
 locals {
@@ -146,6 +161,8 @@ module "master_cluster_addons" {
   gateway_namespace_labels          = var.gateway_namespace_labels
   gateway_labels                    = var.gateway_labels
   install_argocd                    = var.install_argocd && local.cluster_addons.master.name == var.argocd_target_cluster
+  create_argocd_gateway             = var.create_argocd_gateway && local.cluster_addons.master.name == var.argocd_target_cluster
+  argocd_host                       = var.argocd_host
   argocd_chart_version              = var.argocd_chart_version
   argocd_namespace                  = var.argocd_namespace
   argocd_values                     = var.argocd_values

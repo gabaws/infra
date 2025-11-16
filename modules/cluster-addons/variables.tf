@@ -115,6 +115,17 @@ variable "argocd_values" {
   default     = {}
 }
 
+variable "create_argocd_gateway" {
+  description = "Cria Gateway/HTTPRoute (Gateway API) para expor o ArgoCD"
+  type        = bool
+  default     = true
+}
+
+variable "argocd_host" {
+  description = "Host (FQDN) opcional para o Gateway do ArgoCD"
+  type        = string
+  default     = ""
+}
 variable "helm_release_timeout" {
   description = "Tempo (em segundos) aguardado nas instalações Helm"
   type        = number
