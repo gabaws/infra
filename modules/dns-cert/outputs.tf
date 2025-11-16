@@ -10,7 +10,7 @@ output "certificate_name" {
 
 output "certificate_self_link" {
   description = "Self-link do certificado gerenciado"
-  value       = google_certificate_manager_certificate.wildcard.self_link
+  value       = google_certificate_manager_certificate.wildcard.id
 }
 
 
