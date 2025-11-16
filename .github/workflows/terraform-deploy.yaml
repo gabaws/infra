@@ -39,6 +39,7 @@ jobs:
       vpc: ${{ steps.filter.outputs.vpc }}
       gke: ${{ steps.filter.outputs.gke }}
       mesh: ${{ steps.filter.outputs.mesh }}
+      dns: ${{ steps.filter.outputs.dns }}
       project: ${{ steps.filter.outputs.project }}
       root: ${{ steps.filter.outputs.root }}
     steps:
@@ -63,6 +64,10 @@ jobs:
             mesh:
               - 'modules/anthos-service-mesh/**'
               - 'main.tf'
+            dns:
+              - 'modules/dns-cert/**'
+              - 'main.tf'
+              - 'variables.tf'
             project:
               - 'main.tf'
               - 'variables.tf'
@@ -91,6 +96,7 @@ jobs:
           needs.detect-changes.outputs.vpc == 'true' ||
           needs.detect-changes.outputs.gke == 'true' ||
           needs.detect-changes.outputs.mesh == 'true' ||
+          needs.detect-changes.outputs.dns == 'true'  ||
           needs.detect-changes.outputs.project == 'true' ||
           needs.detect-changes.outputs.root == 'true'
         )
@@ -218,6 +224,7 @@ jobs:
           needs.detect-changes.outputs.vpc == 'true' ||
           needs.detect-changes.outputs.gke == 'true' ||
           needs.detect-changes.outputs.mesh == 'true' ||
+          needs.detect-changes.outputs.dns == 'true'  ||
           needs.detect-changes.outputs.project == 'true' ||
           needs.detect-changes.outputs.root == 'true'
         )
@@ -318,6 +325,7 @@ jobs:
           needs.detect-changes.outputs.vpc == 'true' ||
           needs.detect-changes.outputs.gke == 'true' ||
           needs.detect-changes.outputs.mesh == 'true' ||
+          needs.detect-changes.outputs.dns == 'true'  ||
           needs.detect-changes.outputs.project == 'true' ||
           needs.detect-changes.outputs.root == 'true'
         )
