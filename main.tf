@@ -152,6 +152,8 @@ module "master_cluster_addons" {
   argocd_chart                      = var.argocd_chart
   argocd_repository                 = var.argocd_repository
   istio_repository                  = var.istio_repository
+  helm_release_timeout              = var.helm_release_timeout
+  helm_wait                         = var.helm_wait
 
   providers = {
     kubernetes = kubernetes.master
@@ -188,6 +190,8 @@ module "app_cluster_addons" {
   argocd_chart                      = var.argocd_chart
   argocd_repository                 = var.argocd_repository
   istio_repository                  = var.istio_repository
+  helm_release_timeout              = var.helm_release_timeout
+  helm_wait                         = var.helm_wait
 
   providers = {
     kubernetes = kubernetes.app

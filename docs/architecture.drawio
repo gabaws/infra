@@ -1,0 +1,76 @@
+<mxfile host="app.diagrams.net" modified="2025-11-15T20:45:00.000Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)" version="23.0.8" editor="draw.io">
+  <diagram id="anthosMeshDiagram" name="Anthos Mesh">
+    <mxGraphModel dx="1428" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <!-- Project boundary -->
+        <mxCell id="projectBoundary" value="Projeto GCP `infra-474223`" style="rounded=1;strokeWidth=2;strokeColor=#0B8043;fillColor=#E6F4EA;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="40" width="1460" height="780" as="geometry"/>
+        </mxCell>
+        <!-- VPC -->
+        <mxCell id="vpc" value="VPC `main-vpc`" style="rounded=1;strokeColor=#1A73E8;strokeWidth=2;fillColor=#E8F0FE;fontSize=14;fontStyle=1;" vertex="1" parent="projectBoundary">
+          <mxGeometry x="60" y="60" width="1340" height="640" as="geometry"/>
+        </mxCell>
+        <!-- Subnet us-central1 -->
+        <mxCell id="subnetCentral" value="Subnet `subnet-us-central1`&#xa;Região: us-central1&#xa;CIDR: 10.0.1.0/24&#xa;Secundários: Pods 10.1.0.0/16 / Services 10.2.0.0/20" style="rounded=1;strokeColor=#34A853;fillColor=#FFFFFF;fontSize=12;" vertex="1" parent="vpc">
+          <mxGeometry x="100" y="120" width="520" height="220" as="geometry"/>
+        </mxCell>
+        <!-- Subnet us-east1 -->
+        <mxCell id="subnetEast" value="Subnet `subnet-us-east1`&#xa;Região: us-east1&#xa;CIDR: 10.0.2.0/24&#xa;Secundários: Pods 10.3.0.0/16 / Services 10.4.0.0/20" style="rounded=1;strokeColor=#34A853;fillColor=#FFFFFF;fontSize=12;" vertex="1" parent="vpc">
+          <mxGeometry x="720" y="120" width="520" height="220" as="geometry"/>
+        </mxCell>
+        <!-- Cluster master -->
+        <mxCell id="clusterMaster" value="GKE Cluster `master-engine`&#xa;- Região: us-central1-a&#xa;- Nós privados&#xa;- Workload Identity&#xa;- ArgoCD / Istio&#xa;- ASM Member" style="shape=hexagon;perimeter=hexagonPerimeter;strokeColor=#673AB7;fillColor=#EDE7F6;fontSize=12;fontStyle=1;" vertex="1" parent="subnetCentral">
+          <mxGeometry x="150" y="50" width="220" height="140" as="geometry"/>
+        </mxCell>
+        <!-- Cluster app -->
+        <mxCell id="clusterApp" value="GKE Cluster `app-engine`&#xa;- Região: us-east1-b&#xa;- Nós privados&#xa;- Workload Identity&#xa;- Istio&#xa;- ASM Member" style="shape=hexagon;perimeter=hexagonPerimeter;strokeColor=#673AB7;fillColor=#EDE7F6;fontSize=12;fontStyle=1;" vertex="1" parent="subnetEast">
+          <mxGeometry x="150" y="50" width="220" height="140" as="geometry"/>
+        </mxCell>
+        <!-- ArgoCD icon -->
+        <mxCell id="argocd" value="ArgoCD&#xa;(GitOps / Deploy Apps)" style="shape=process;rounded=1;strokeColor=#F4511E;fillColor=#FEEAE6;fontSize=12;fontStyle=1;" vertex="1" parent="subnetCentral">
+          <mxGeometry x="410" y="60" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <!-- GitHub Actions -->
+        <mxCell id="gha" value="GitHub Actions&#xa;(Terraform Pipeline)" style="shape=process;rounded=1;strokeColor=#5F6368;fillColor=#F1F3F4;fontSize=12;" vertex="1" parent="projectBoundary">
+          <mxGeometry x="1160" y="560" width="180" height="80" as="geometry"/>
+        </mxCell>
+        <!-- Terraform -->
+        <mxCell id="terraform" value="Terraform State Bucket&#xa;(GCS + Locking)" style="shape=dataStorage;strokeColor=#5F6368;fillColor=#FFF3E0;fontSize=12;" vertex="1" parent="projectBoundary">
+          <mxGeometry x="920" y="560" width="200" height="100" as="geometry"/>
+        </mxCell>
+        <!-- ASM mesh ellipse -->
+        <mxCell id="mesh" value="Anthos Service Mesh&#xa;(Multi-cluster mTLS / Observabilidade)" style="ellipse;strokeColor=#039BE5;fillColor=#E1F5FE;fontSize=13;fontStyle=1;" vertex="1" parent="vpc">
+          <mxGeometry x="500" y="360" width="480" height="200" as="geometry"/>
+        </mxCell>
+        <!-- Bastion label -->
+        <mxCell id="cloudNat" value="Cloud NAT&#xa;+ Private Google Access" style="shape=cloud;strokeColor=#1A73E8;fillColor=#FFFFFF;fontSize=12;" vertex="1" parent="vpc">
+          <mxGeometry x="620" y="80" width="200" height="90" as="geometry"/>
+        </mxCell>
+        <!-- Edges -->
+        <mxCell id="edgeGAtoTF" edge="1" parent="projectBoundary" source="gha" target="terraform" style="endArrow=classic;strokeColor=#5F6368;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edgeTFtoVPC" edge="1" parent="projectBoundary" source="terraform" target="vpc" style="endArrow=classic;strokeColor=#5F6368;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edgeMasterMesh" edge="1" parent="mesh" source="mesh" target="clusterMaster" style="dashed=1;strokeColor=#039BE5;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edgeAppMesh" edge="1" parent="mesh" source="mesh" target="clusterApp" style="dashed=1;strokeColor=#039BE5;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edgeArgoMaster" edge="1" parent="subnetCentral" source="argocd" target="clusterMaster" style="endArrow=classic;strokeColor=#F4511E;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edgeArgoMesh" edge="1" parent="vpc" source="argocd" target="clusterApp" style="dashed=1;strokeColor=#F4511E;labelBackgroundColor=#ffffff;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="820" y="260" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
+

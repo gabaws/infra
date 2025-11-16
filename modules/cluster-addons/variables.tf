@@ -114,3 +114,15 @@ variable "argocd_values" {
   type        = map(any)
   default     = {}
 }
+
+variable "helm_release_timeout" {
+  description = "Tempo (em segundos) aguardado nas instalações Helm"
+  type        = number
+  default     = 900
+}
+
+variable "helm_wait" {
+  description = "Controla se o Helm deve aguardar o rollout completo (wait)"
+  type        = bool
+  default     = false
+}

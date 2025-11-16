@@ -154,7 +154,7 @@ variable "istio_namespace" {
 variable "manage_istio_namespace" {
   description = "Quando true, o Terraform cria/atualiza o namespace do Istio antes dos charts. Defina como false se o namespace já é gerenciado por outro processo (ex.: Anthos Service Mesh)."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "gateway_namespace" {
@@ -257,5 +257,17 @@ variable "argocd_values" {
   description = "Valores adicionais para o chart Helm do ArgoCD"
   type        = map(any)
   default     = {}
+}
+
+variable "helm_release_timeout" {
+  description = "Tempo (em segundos) para aguardar a conclusão de cada helm_release"
+  type        = number
+  default     = 900
+}
+
+variable "helm_wait" {
+  description = "Controla se o Terraform deve aguardar o Helm concluir o rollout (wait). Desative em clusters lentos para evitar timeout."
+  type        = bool
+  default     = false
 }
 
