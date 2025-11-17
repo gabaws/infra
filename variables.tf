@@ -77,7 +77,7 @@ variable "secondary_ranges" {
 }
 
 variable "primary_cluster_name" {
-  description = "Nome lógico do cluster principal (receberá ArgoCD e fluxos de orquestração)"
+  description = "Nome lógico do cluster principal"
   type        = string
   default     = "master-engine"
 }
@@ -86,12 +86,6 @@ variable "secondary_cluster_name" {
   description = "Nome lógico do segundo cluster (foco em workloads de aplicação)"
   type        = string
   default     = "app-engine"
-}
-
-variable "argocd_target_cluster" {
-  description = "Nome do cluster onde o ArgoCD será instalado"
-  type        = string
-  default     = "master-engine"
 }
 
 variable "gke_clusters" {
@@ -139,148 +133,6 @@ variable "gke_clusters" {
   }
 }
 
-variable "enable_cluster_addons" {
-  description = "Quando true, instala os add-ons Kubernetes (Istio/ASM, gateways e ArgoCD). Requer clusters já acessíveis."
-  type        = bool
-  default     = false
-}
-
-variable "istio_namespace" {
-  description = "Namespace onde o Istio/ASM será instalado"
-  type        = string
-  default     = "istio-system"
-}
-
-variable "manage_istio_namespace" {
-  description = "Quando true, o Terraform cria/atualiza o namespace do Istio antes dos charts. Defina como false se o namespace já é gerenciado por outro processo (ex.: Anthos Service Mesh)."
-  type        = bool
-  default     = false
-}
-
-variable "gateway_namespace" {
-  description = "Namespace dedicado ao gateway (deixe vazio para usar o mesmo do Istio)"
-  type        = string
-  default     = ""
-}
-
-variable "asm_revision" {
-  description = "Revisão do ASM/Istio aplicada nas labels (ex.: asm-managed)"
-  type        = string
-  default     = "asm-managed"
-}
-
-variable "istio_chart_version" {
-  description = "Versão das charts oficiais do Istio/ASM a serem instaladas"
-  type        = string
-  default     = "1.21.1"
-}
-
-variable "istio_repository" {
-  description = "Repositório Helm com as charts do Istio/ASM"
-  type        = string
-  default     = "https://istio-release.storage.googleapis.com/charts"
-}
-
-variable "istio_gateway_chart" {
-  description = "Nome do chart Helm usado para instalar o gateway"
-  type        = string
-  default     = "gateway"
-}
-
-variable "install_gateway" {
-  description = "Controla a instalação do Istio Ingress Gateway"
-  type        = bool
-  default     = true
-}
-
-variable "additional_istio_namespace_labels" {
-  description = "Labels adicionais para o namespace do Istio"
-  type        = map(string)
-  default     = {}
-}
-
-variable "gateway_namespace_labels" {
-  description = "Labels adicionais para o namespace do gateway"
-  type        = map(string)
-  default     = {}
-}
-
-variable "gateway_labels" {
-  description = "Labels adicionais aplicadas ao deployment do gateway"
-  type        = map(string)
-  default     = {}
-}
-
-variable "istiod_values" {
-  description = "Valores adicionais para o chart Helm do istiod"
-  type        = map(any)
-  default     = {}
-}
-
-variable "istio_gateway_values" {
-  description = "Valores adicionais para o chart Helm do gateway"
-  type        = map(any)
-  default     = {}
-}
-
-variable "install_argocd" {
-  description = "Controla a instalação do ArgoCD em cada cluster"
-  type        = bool
-  default     = true
-}
-
-variable "argocd_namespace" {
-  description = "Namespace onde o ArgoCD será instalado"
-  type        = string
-  default     = "argocd"
-}
-
-variable "argocd_chart_version" {
-  description = "Versão do chart Helm do ArgoCD"
-  type        = string
-  default     = "7.3.6"
-}
-
-variable "argocd_chart" {
-  description = "Nome do chart Helm do ArgoCD"
-  type        = string
-  default     = "argo-cd"
-}
-
-variable "argocd_repository" {
-  description = "Repositório Helm utilizado para instalar o ArgoCD"
-  type        = string
-  default     = "https://argoproj.github.io/argo-helm"
-}
-
-variable "argocd_values" {
-  description = "Valores adicionais para o chart Helm do ArgoCD"
-  type        = map(any)
-  default     = {}
-}
-
-variable "create_argocd_gateway" {
-  description = "Cria um Gateway/HTTPRoute (Gateway API) para expor o ArgoCD no cluster master quando install_argocd=true"
-  type        = bool
-  default     = false
-}
-
-variable "argocd_host" {
-  description = "Host (FQDN) opcional para o Gateway do ArgoCD. Deixe vazio para aceitar qualquer host (teste via IP)."
-  type        = string
-  default     = ""
-}
-variable "helm_release_timeout" {
-  description = "Tempo (em segundos) para aguardar a conclusão de cada helm_release"
-  type        = number
-  default     = 900
-}
-
-variable "helm_wait" {
-  description = "Controla se o Terraform deve aguardar o Helm concluir o rollout (wait). Desative em clusters lentos para evitar timeout."
-  type        = bool
-  default     = false
-}
 
 variable "domain_name" {
   description = "Domínio raiz gerenciado no Cloud DNS (ex.: cloudab.online)"

@@ -5,7 +5,6 @@ project_id = "infra-474223"  # Existing GCP project ID
 region                 = "us-central1"
 primary_cluster_name   = "master-engine"
 secondary_cluster_name = "app-engine"
-argocd_target_cluster  = "master-engine"
 
 # VPC Configuration
 network_name = "main-vpc"
@@ -79,41 +78,6 @@ gke_clusters = {
   }
 }
 
-# Controla a instalação dos add-ons (Istio, gateways, ArgoCD).
-# Fluxo sugerido:
-# 1) terraform apply -var enable_cluster_addons=false
-# 2) terraform apply -var enable_cluster_addons=true
-enable_cluster_addons = false
-
-# ASM / Istio / Add-ons
-istio_namespace          = "istio-system"
-manage_istio_namespace   = false  # Defina true caso deseje que o Terraform crie/gerencie o namespace
-gateway_namespace        = "istio-ingress"
-asm_revision         = "asm-managed"
-istio_chart_version  = "1.21.1"
-install_gateway      = true
-install_argocd       = true
-argocd_namespace     = "argocd"
-argocd_chart_version = "7.3.6"
-
-# Customizações opcionais
-istiod_values = {
-  meshConfig = {
-    accessLogFile = "/dev/stdout"
-  }
-}
-
-istio_gateway_values = {
-  service = {
-    type = "LoadBalancer"
-  }
-}
-
-argocd_values = {
-  server = {
-    service = {
-      type = "LoadBalancer"
-    }
-  }
-}
+# Domain Configuration
+domain_name = "cloudab.online"
 
