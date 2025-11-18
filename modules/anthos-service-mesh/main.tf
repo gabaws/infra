@@ -85,17 +85,10 @@ resource "google_gke_hub_feature" "multicluster_ingress" {
   location = "global"
   project  = var.project_id
 
-  depends_on = [
-    google_project_service.gkehub_api,
-    google_gke_hub_membership.memberships
-  ]
-}
-
-# Enable Multi-cluster Services Feature
-resource "google_gke_hub_feature" "multicluster_services" {
-  name     = "multiclusterservice"
-  location = "global"
-  project  = var.project_id
+  # Config cluster for Multi-cluster Ingress (first cluster)
+  multicluster_ingress_config {
+    config_membership = google_gke_hub_membership.memberships[keys(var.clusters)[0]].membership_id
+  }
 
   depends_on = [
     google_project_service.gkehub_api,
@@ -114,21 +107,6 @@ resource "google_gke_hub_feature_membership" "multicluster_ingress_membership" {
 
   depends_on = [
     google_gke_hub_feature.multicluster_ingress,
-    google_gke_hub_membership.memberships
-  ]
-}
-
-# Multi-cluster Services Feature Membership for each cluster
-resource "google_gke_hub_feature_membership" "multicluster_services_membership" {
-  for_each = var.clusters
-
-  location   = "global"
-  feature    = google_gke_hub_feature.multicluster_services.name
-  membership = google_gke_hub_membership.memberships[each.key].membership_id
-  project    = var.project_id
-
-  depends_on = [
-    google_gke_hub_feature.multicluster_services,
     google_gke_hub_membership.memberships
   ]
 }

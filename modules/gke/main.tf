@@ -84,6 +84,9 @@ resource "google_container_cluster" "clusters" {
     enabled = true
   }
 
+  # Enable intranode visibility
+  enable_intranode_visibility = true
+
   # Addons
   addons_config {
     http_load_balancing {
