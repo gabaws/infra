@@ -18,3 +18,38 @@ output "membership_names" {
   sensitive   = true
 }
 
+output "multicluster_ingress_status" {
+  description = "Status of Multi-cluster Ingress feature"
+  value = {
+    feature_state = google_gke_hub_feature.multicluster_ingress.state
+    memberships = {
+      for k, v in google_gke_hub_feature_membership.multicluster_ingress_membership : k => {
+        membership_id = v.membership_id
+        state        = v.state
+      }
+    }
+  }
+  sensitive = true
+}
+
+output "multicluster_services_status" {
+  description = "Status of Multi-cluster Services feature"
+  value = {
+    feature_state = google_gke_hub_feature.multicluster_services.state
+    memberships = {
+      for k, v in google_gke_hub_feature_membership.multicluster_services_membership : k => {
+        membership_id = v.membership_id
+        state        = v.state
+      }
+    }
+  }
+  sensitive = true
+}
+
+output "membership_ids" {
+  description = "Membership IDs for multi-cluster configuration"
+  value = {
+    for k, v in google_gke_hub_membership.memberships : k => v.membership_id
+  }
+}
+

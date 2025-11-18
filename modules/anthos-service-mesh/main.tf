@@ -79,3 +79,67 @@ resource "google_gke_hub_feature_membership" "mesh_feature_membership" {
   ]
 }
 
+# Enable Multi-cluster Ingress Feature
+resource "google_gke_hub_feature" "multicluster_ingress" {
+  name     = "multiclusteringress"
+  location = "global"
+  project  = var.project_id
+
+  depends_on = [
+    google_project_service.gkehub_api,
+    google_gke_hub_membership.memberships
+  ]
+}
+
+# Enable Multi-cluster Services Feature
+resource "google_gke_hub_feature" "multicluster_services" {
+  name     = "multiclusterservice"
+  location = "global"
+  project  = var.project_id
+
+  depends_on = [
+    google_project_service.gkehub_api,
+    google_gke_hub_membership.memberships
+  ]
+}
+
+# Multi-cluster Ingress Feature Membership for each cluster
+# O primeiro cluster será usado como config cluster para o Multi-cluster Ingress
+locals {
+  config_cluster_key = keys(var.clusters)[0]
+}
+
+resource "google_gke_hub_feature_membership" "multicluster_ingress_membership" {
+  for_each = var.clusters
+
+  location   = "global"
+  feature    = google_gke_hub_feature.multicluster_ingress.name
+  membership = google_gke_hub_membership.memberships[each.key].membership_id
+  project    = var.project_id
+
+  multiclusteringress {
+    # O config_membership aponta para o primeiro cluster (config cluster)
+    config_membership = "projects/${var.project_id}/locations/global/memberships/${google_gke_hub_membership.memberships[local.config_cluster_key].membership_id}"
+  }
+
+  depends_on = [
+    google_gke_hub_feature.multicluster_ingress,
+    google_gke_hub_membership.memberships
+  ]
+}
+
+# Multi-cluster Services Feature Membership for each cluster
+resource "google_gke_hub_feature_membership" "multicluster_services_membership" {
+  for_each = var.clusters
+
+  location   = "global"
+  feature    = google_gke_hub_feature.multicluster_services.name
+  membership = google_gke_hub_membership.memberships[each.key].membership_id
+  project    = var.project_id
+
+  depends_on = [
+    google_gke_hub_feature.multicluster_services,
+    google_gke_hub_membership.memberships
+  ]
+}
+

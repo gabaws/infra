@@ -30,6 +30,23 @@ output "anthos_service_mesh_status" {
   sensitive   = true
 }
 
+output "multicluster_ingress_status" {
+  description = "Multi-cluster Ingress configuration status"
+  value       = module.anthos_service_mesh.multicluster_ingress_status
+  sensitive   = true
+}
+
+output "multicluster_services_status" {
+  description = "Multi-cluster Services configuration status"
+  value       = module.anthos_service_mesh.multicluster_services_status
+  sensitive   = true
+}
+
+output "gke_hub_membership_ids" {
+  description = "GKE Hub membership IDs for multi-cluster configuration"
+  value       = module.anthos_service_mesh.membership_ids
+}
+
 output "cluster_endpoints" {
   description = "GKE cluster endpoints"
   value = {

@@ -73,7 +73,7 @@ module "gke_clusters" {
   ]
 }
 
-# Anthos Service Mesh Module
+# Anthos Service Mesh Module (inclui configuração de multi-cluster)
 module "anthos_service_mesh" {
   source = "./modules/anthos-service-mesh"
 
