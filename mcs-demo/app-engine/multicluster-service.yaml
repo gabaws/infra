@@ -5,18 +5,5 @@ metadata:
   namespace: mcs-demo
 spec:
   clusters:
-  - cluster: app-engine
-    region: us-east1
-  - cluster: master-engine
-    region: us-central1
-  template:
-    metadata:
-      labels:
-        app: hello-app-engine
-    spec:
-      ports:
-      - port: 80
-        targetPort: 8080
-        protocol: TCP
-      selector:
-        app: hello-app-engine
+  - name: app-engine
+  - name: master-engine
