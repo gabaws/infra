@@ -24,8 +24,7 @@ output "multicluster_ingress_status" {
     feature_state = google_gke_hub_feature.multicluster_ingress.state
     memberships = {
       for k, v in google_gke_hub_feature_membership.multicluster_ingress_membership : k => {
-        membership_id = v.membership_id
-        state        = v.state
+        membership = v.membership
       }
     }
   }
@@ -38,8 +37,7 @@ output "multicluster_services_status" {
     feature_state = google_gke_hub_feature.multicluster_services.state
     memberships = {
       for k, v in google_gke_hub_feature_membership.multicluster_services_membership : k => {
-        membership_id = v.membership_id
-        state        = v.state
+        membership = v.membership
       }
     }
   }
