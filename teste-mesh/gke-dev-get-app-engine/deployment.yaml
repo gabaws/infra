@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dev-get-test
+  namespace: dev-get-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dev-get-test
+  template:
+    metadata:
+      labels:
+        app: dev-get-test
+    spec:
+      containers:
+      - name: dev-get-test
+        image: nicolaka/netshoot:latest
+        command: ["/bin/sh"]
+        args:
+          - -c
+          - |
+            # Criar arquivo de resposta
+            echo "hello-from-dev-get-test" > /tmp/index.html
+            # Iniciar servidor HTTP simples com Python (já disponível no netshoot)
+            cd /tmp && python3 -m http.server 5678 &
+            # Manter container rodando
+            sleep infinity
+        ports:
+        - containerPort: 5678

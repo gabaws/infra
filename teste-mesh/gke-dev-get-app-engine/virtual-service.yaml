@@ -1,0 +1,17 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: dev-get-test
+  namespace: dev-get-test
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - dev-get-test
+  http:
+  - match:
+    - uri:
+        prefix: "/server"
+    route:
+    - destination:
+        host: dev-get-test.dev-get-test.svc.cluster.local
