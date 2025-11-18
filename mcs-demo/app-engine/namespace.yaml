@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mcs-demo
+  labels:
+    name: mcs-demo
+    istio-injection: enabled
+    istio.io/rev: asm-managed

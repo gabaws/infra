@@ -42,9 +42,9 @@ PROJECT_ID="infra-474223"
 CONFIG_MEMBERSHIP="projects/${PROJECT_ID}/locations/global/memberships/master-engine-membership"
 
 # Habilitar a feature
-gcloud container fleet ingress enable \
-  --config-membership=${CONFIG_MEMBERSHIP} \
-  --project=${PROJECT_ID}
+gcloud container fleet ingress update \
+  --config-membership="${MEMBERSHIP_1}" \
+  --project="${PROJECT_ID}"
 ```
 
 ### Passo 4: Registrar Clusters na Feature

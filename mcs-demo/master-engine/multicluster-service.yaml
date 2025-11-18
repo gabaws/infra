@@ -1,0 +1,22 @@
+apiVersion: networking.gke.io/v1
+kind: MultiClusterService
+metadata:
+  name: hello-master-engine
+  namespace: mcs-demo
+spec:
+  clusters:
+  - cluster: app-engine
+    region: us-east1
+  - cluster: master-engine
+    region: us-central1
+  template:
+    metadata:
+      labels:
+        app: hello-master-engine
+    spec:
+      ports:
+      - port: 80
+        targetPort: 8080
+        protocol: TCP
+      selector:
+        app: hello-master-engine

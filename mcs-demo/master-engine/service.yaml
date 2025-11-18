@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-master-engine
+  namespace: mcs-demo
+  labels:
+    app: hello-master-engine
+spec:
+  type: ClusterIP
+  selector:
+    app: hello-master-engine
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP

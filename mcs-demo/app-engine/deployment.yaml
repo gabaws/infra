@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-app-engine
+  namespace: mcs-demo
+  labels:
+    app: hello-app-engine
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hello-app-engine
+  template:
+    metadata:
+      labels:
+        app: hello-app-engine
+      annotations:
+        sidecar.istio.io/inject: "true"
+    spec:
+      containers:
+      - name: hello-server
+        image: gcr.io/google-samples/hello-app:1.0
+        ports:
+        - containerPort: 8080
+        env:
+        - name: PORT
+          value: "8080"
