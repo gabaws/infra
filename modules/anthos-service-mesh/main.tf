@@ -85,11 +85,6 @@ resource "google_gke_hub_feature" "multicluster_ingress" {
   location = "global"
   project  = var.project_id
 
-  # Config cluster for Multi-cluster Ingress (first cluster)
-  multicluster_ingress_config {
-    config_membership = google_gke_hub_membership.memberships[keys(var.clusters)[0]].membership_id
-  }
-
   depends_on = [
     google_project_service.gkehub_api,
     google_gke_hub_membership.memberships
