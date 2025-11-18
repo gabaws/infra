@@ -11,13 +11,13 @@ mcs-demo/
 │   ├── namespace.yaml
 │   ├── deployment.yaml
 │   ├── service.yaml
-│   ├── multicluster-service.yaml
+│   ├── service-export.yaml
 │   └── kustomization.yaml
 └── master-engine/              # Aplicação no cluster master-engine
     ├── namespace.yaml
     ├── deployment.yaml
     ├── service.yaml
-    ├── multicluster-service.yaml
+    ├── service-export.yaml
     └── kustomization.yaml
 ```
 
@@ -93,14 +93,14 @@ kubectl get svc -n mcs-demo --context=gke_infra-474223_us-east1-b_app-engine
 kubectl get svc -n mcs-demo --context=gke_infra-474223_us-central1-a_master-engine
 ```
 
-### Verificar MultiClusterServices
+### Verificar ServiceExports
 
 ```bash
 # No cluster app-engine
-kubectl get multiclusterservice -n mcs-demo --context=gke_infra-474223_us-east1-b_app-engine
+kubectl get serviceexport -n mcs-demo --context=gke_infra-474223_us-east1-b_app-engine
 
 # No cluster master-engine
-kubectl get multiclusterservice -n mcs-demo --context=gke_infra-474223_us-central1-a_master-engine
+kubectl get serviceexport -n mcs-demo --context=gke_infra-474223_us-central1-a_master-engine
 ```
 
 ## 🔧 Sidecar Istio
@@ -153,7 +153,7 @@ nslookup hello-app-engine.mcs-demo.svc.clusterset.local
 
 ## 📝 Formato DNS Multi-cluster
 
-Os serviços expostos via MultiClusterService podem ser acessados usando o formato:
+Os serviços expostos via ServiceExport podem ser acessados usando o formato:
 
 ```
 <service-name>.<namespace>.svc.clusterset.local
@@ -165,11 +165,11 @@ Exemplos:
 
 ## 🔍 Troubleshooting
 
-### Verificar status do MultiClusterService
+### Verificar status do ServiceExport
 
 ```bash
-kubectl describe multiclusterservice hello-app-engine -n mcs-demo
-kubectl describe multiclusterservice hello-master-engine -n mcs-demo
+kubectl describe serviceexport hello-app-engine -n mcs-demo
+kubectl describe serviceexport hello-master-engine -n mcs-demo
 ```
 
 ### Verificar logs dos pods
@@ -194,4 +194,4 @@ kubectl run nettest --image=nicolaka/netshoot:latest --rm -it --restart=Never -n
 ## 📚 Referências
 
 - [Multi-cluster Services Documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/multi-cluster-services?hl=pt-br)
-- [MultiClusterService Resource](https://cloud.google.com/kubernetes-engine/docs/how-to/multi-cluster-services#create_multiclusterservice)
+- [ServiceExport Resource](https://cloud.google.com/kubernetes-engine/docs/how-to/multi-cluster-services#registering_a_service_for_export)

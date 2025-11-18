@@ -37,14 +37,14 @@ echo "Cluster $MASTER_ENGINE_CLUSTER:"
 kubectl get svc -n mcs-demo --context=$MASTER_ENGINE_CTX
 
 echo ""
-echo "📋 Verificando MultiClusterServices..."
+echo "📋 Verificando ServiceExports..."
 echo ""
 echo "Cluster $APP_ENGINE_CLUSTER:"
-kubectl get multiclusterservice -n mcs-demo --context=$APP_ENGINE_CTX
+kubectl get serviceexport -n mcs-demo --context=$APP_ENGINE_CTX
 
 echo ""
 echo "Cluster $MASTER_ENGINE_CLUSTER:"
-kubectl get multiclusterservice -n mcs-demo --context=$MASTER_ENGINE_CTX
+kubectl get serviceexport -n mcs-demo --context=$MASTER_ENGINE_CTX
 
 echo ""
 echo "🧪 Teste 1: De $APP_ENGINE_CLUSTER para $MASTER_ENGINE_CLUSTER"
@@ -65,4 +65,4 @@ echo ""
 echo "✅ Testes concluídos!"
 echo ""
 echo "💡 Para mais detalhes, verifique os logs dos pods ou use:"
-echo "   kubectl describe multiclusterservice <nome> -n mcs-demo --context=<contexto>"
+echo "   kubectl describe serviceexport <nome> -n mcs-demo --context=<contexto>"

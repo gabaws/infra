@@ -70,11 +70,11 @@ kubectl get pods -n mcs-demo --all-namespaces
 # Ver serviços
 kubectl get svc -n mcs-demo --all-namespaces
 
-# Ver MultiClusterServices
-kubectl get multiclusterservice -n mcs-demo --all-namespaces
+# Ver ServiceExports
+kubectl get serviceexport -n mcs-demo --all-namespaces
 
-# Ver detalhes de um MultiClusterService
-kubectl describe multiclusterservice hello-app-engine -n mcs-demo
+# Ver detalhes de um ServiceExport
+kubectl describe serviceexport hello-app-engine -n mcs-demo
 ```
 
 ## 🎯 Formato DNS

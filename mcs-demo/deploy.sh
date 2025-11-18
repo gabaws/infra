@@ -75,14 +75,14 @@ echo "Cluster $MASTER_ENGINE_CLUSTER:"
 kubectl get pods -n mcs-demo --context=gke_${PROJECT_ID}_${MASTER_ENGINE_LOCATION}_${MASTER_ENGINE_CLUSTER}
 
 echo ""
-echo "📊 Status dos MultiClusterServices:"
+echo "📊 Status dos ServiceExports:"
 echo ""
 echo "Cluster $APP_ENGINE_CLUSTER:"
-kubectl get multiclusterservice -n mcs-demo --context=gke_${PROJECT_ID}_${APP_ENGINE_LOCATION}_${APP_ENGINE_CLUSTER}
+kubectl get serviceexport -n mcs-demo --context=gke_${PROJECT_ID}_${APP_ENGINE_LOCATION}_${APP_ENGINE_CLUSTER}
 
 echo ""
 echo "Cluster $MASTER_ENGINE_CLUSTER:"
-kubectl get multiclusterservice -n mcs-demo --context=gke_${PROJECT_ID}_${MASTER_ENGINE_LOCATION}_${MASTER_ENGINE_CLUSTER}
+kubectl get serviceexport -n mcs-demo --context=gke_${PROJECT_ID}_${MASTER_ENGINE_LOCATION}_${MASTER_ENGINE_CLUSTER}
 
 echo ""
 echo "🔍 Verificando injeção do sidecar Istio..."
