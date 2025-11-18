@@ -30,11 +30,8 @@ output "anthos_service_mesh_status" {
   sensitive   = true
 }
 
-output "multicluster_ingress_status" {
-  description = "Multi-cluster Ingress configuration status"
-  value       = module.anthos_service_mesh.multicluster_ingress_status
-  sensitive   = true
-}
+# Multi-cluster Ingress output removed - feature must be enabled manually
+# See modules/anthos-service-mesh/main.tf for instructions
 
 output "gke_hub_membership_ids" {
   description = "GKE Hub membership IDs for multi-cluster configuration"

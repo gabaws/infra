@@ -1,0 +1,501 @@
+2025-11-18T18:00:28.7068360Z Current runner version: '2.329.0'
+2025-11-18T18:00:28.7093117Z ##[group]Runner Image Provisioner
+2025-11-18T18:00:28.7094333Z Hosted Compute Agent
+2025-11-18T18:00:28.7095151Z Version: 20251016.436
+2025-11-18T18:00:28.7096068Z Commit: 8ab8ac8bfd662a3739dab9fe09456aba92132568
+2025-11-18T18:00:28.7097104Z Build Date: 2025-10-15T20:44:12Z
+2025-11-18T18:00:28.7098088Z ##[endgroup]
+2025-11-18T18:00:28.7098889Z ##[group]Operating System
+2025-11-18T18:00:28.7099757Z Ubuntu
+2025-11-18T18:00:28.7100850Z 24.04.3
+2025-11-18T18:00:28.7101551Z LTS
+2025-11-18T18:00:28.7102244Z ##[endgroup]
+2025-11-18T18:00:28.7103220Z ##[group]Runner Image
+2025-11-18T18:00:28.7104224Z Image: ubuntu-24.04
+2025-11-18T18:00:28.7105117Z Version: 20251112.124.1
+2025-11-18T18:00:28.7106985Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20251112.124/images/ubuntu/Ubuntu2404-Readme.md
+2025-11-18T18:00:28.7109725Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20251112.124
+2025-11-18T18:00:28.7111826Z ##[endgroup]
+2025-11-18T18:00:28.7113566Z ##[group]GITHUB_TOKEN Permissions
+2025-11-18T18:00:28.7115958Z Contents: read
+2025-11-18T18:00:28.7116857Z Metadata: read
+2025-11-18T18:00:28.7117657Z PullRequests: write
+2025-11-18T18:00:28.7118605Z ##[endgroup]
+2025-11-18T18:00:28.7121950Z Secret source: Actions
+2025-11-18T18:00:28.7122998Z Prepare workflow directory
+2025-11-18T18:00:28.7570444Z Prepare all required actions
+2025-11-18T18:00:28.7625358Z Getting action download info
+2025-11-18T18:00:29.0989838Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-11-18T18:00:29.1988654Z Download action repository 'google-github-actions/auth@v2' (SHA:c200f3691d83b41bf9bbd8638997a462592937ed)
+2025-11-18T18:00:29.4102967Z Download action repository 'hashicorp/setup-terraform@v3' (SHA:b9cd54a3c349d3f38e8881555d616ced269862dd)
+2025-11-18T18:00:29.6182987Z Download action repository 'actions/download-artifact@v4' (SHA:d3f86a106a0bac45b974a628896c90dbdf5c8093)
+2025-11-18T18:00:29.8498431Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2025-11-18T18:00:30.0608996Z Complete job name: terraform-apply
+2025-11-18T18:00:30.1339883Z ##[group]Run actions/checkout@v4
+2025-11-18T18:00:30.1341098Z with:
+2025-11-18T18:00:30.1341700Z   repository: gabaws/infra
+2025-11-18T18:00:30.1342550Z   token: ***
+2025-11-18T18:00:30.1343127Z   ssh-strict: true
+2025-11-18T18:00:30.1343718Z   ssh-user: git
+2025-11-18T18:00:30.1344303Z   persist-credentials: true
+2025-11-18T18:00:30.1344951Z   clean: true
+2025-11-18T18:00:30.1345541Z   sparse-checkout-cone-mode: true
+2025-11-18T18:00:30.1346250Z   fetch-depth: 1
+2025-11-18T18:00:30.1346839Z   fetch-tags: false
+2025-11-18T18:00:30.1347423Z   show-progress: true
+2025-11-18T18:00:30.1348035Z   lfs: false
+2025-11-18T18:00:30.1348588Z   submodules: false
+2025-11-18T18:00:30.1349186Z   set-safe-directory: true
+2025-11-18T18:00:30.1350059Z ##[endgroup]
+2025-11-18T18:00:30.2447566Z Syncing repository: gabaws/infra
+2025-11-18T18:00:30.2451200Z ##[group]Getting Git version info
+2025-11-18T18:00:30.2452808Z Working directory is '/home/runner/work/infra/infra'
+2025-11-18T18:00:30.2454741Z [command]/usr/bin/git version
+2025-11-18T18:00:30.2516132Z git version 2.51.2
+2025-11-18T18:00:30.2542519Z ##[endgroup]
+2025-11-18T18:00:30.2555659Z Temporarily overriding HOME='/home/runner/work/_temp/4978a033-582c-4357-83ae-1305dde91c64' before making global git config changes
+2025-11-18T18:00:30.2557431Z Adding repository directory to the temporary git global config as a safe directory
+2025-11-18T18:00:30.2560953Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/infra/infra
+2025-11-18T18:00:30.2602695Z Deleting the contents of '/home/runner/work/infra/infra'
+2025-11-18T18:00:30.2605932Z ##[group]Initializing the repository
+2025-11-18T18:00:30.2609751Z [command]/usr/bin/git init /home/runner/work/infra/infra
+2025-11-18T18:00:30.2719112Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-11-18T18:00:30.2721107Z hint: is subject to change. To configure the initial branch name to use in all
+2025-11-18T18:00:30.2722880Z hint: of your new repositories, which will suppress this warning, call:
+2025-11-18T18:00:30.2723973Z hint:
+2025-11-18T18:00:30.2725147Z hint: 	git config --global init.defaultBranch <name>
+2025-11-18T18:00:30.2726592Z hint:
+2025-11-18T18:00:30.2727991Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-11-18T18:00:30.2730161Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-11-18T18:00:30.2732080Z hint:
+2025-11-18T18:00:30.2733024Z hint: 	git branch -m <name>
+2025-11-18T18:00:30.2734191Z hint:
+2025-11-18T18:00:30.2735650Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-11-18T18:00:30.2738109Z Initialized empty Git repository in /home/runner/work/infra/infra/.git/
+2025-11-18T18:00:30.2741555Z [command]/usr/bin/git remote add origin https://github.com/gabaws/infra
+2025-11-18T18:00:30.2773482Z ##[endgroup]
+2025-11-18T18:00:30.2775175Z ##[group]Disabling automatic garbage collection
+2025-11-18T18:00:30.2777568Z [command]/usr/bin/git config --local gc.auto 0
+2025-11-18T18:00:30.2806929Z ##[endgroup]
+2025-11-18T18:00:30.2808677Z ##[group]Setting up auth
+2025-11-18T18:00:30.2814520Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-11-18T18:00:30.2846132Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-11-18T18:00:30.3183074Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-11-18T18:00:30.3212991Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-11-18T18:00:30.3429906Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-11-18T18:00:30.3464857Z ##[endgroup]
+2025-11-18T18:00:30.3474219Z ##[group]Fetching the repository
+2025-11-18T18:00:30.3477258Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +c671d9e2b268a98b8d21054f226ca65b43cf5004:refs/remotes/origin/main
+2025-11-18T18:00:31.0836773Z From https://github.com/gabaws/infra
+2025-11-18T18:00:31.0839227Z  * [new ref]         c671d9e2b268a98b8d21054f226ca65b43cf5004 -> origin/main
+2025-11-18T18:00:31.0871289Z ##[endgroup]
+2025-11-18T18:00:31.0872876Z ##[group]Determining the checkout info
+2025-11-18T18:00:31.0875996Z ##[endgroup]
+2025-11-18T18:00:31.0878731Z [command]/usr/bin/git sparse-checkout disable
+2025-11-18T18:00:31.0920232Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-11-18T18:00:31.0950356Z ##[group]Checking out the ref
+2025-11-18T18:00:31.0953064Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2025-11-18T18:00:31.1046004Z Switched to a new branch 'main'
+2025-11-18T18:00:31.1049098Z branch 'main' set up to track 'origin/main'.
+2025-11-18T18:00:31.1056311Z ##[endgroup]
+2025-11-18T18:00:31.1096882Z [command]/usr/bin/git log -1 --format=%H
+2025-11-18T18:00:31.1120393Z c671d9e2b268a98b8d21054f226ca65b43cf5004
+2025-11-18T18:00:31.1427188Z ##[group]Run google-github-actions/auth@v2
+2025-11-18T18:00:31.1428077Z with:
+2025-11-18T18:00:31.1429827Z   workload_identity_provider: projects/961330940767/locations/global/workloadIdentityPools/github-actions-pool/providers/github
+2025-11-18T18:00:31.1432420Z   service_account: terraform-deployer@infra-474223.iam.gserviceaccount.com
+2025-11-18T18:00:31.1433679Z   create_credentials_file: true
+2025-11-18T18:00:31.1434477Z   export_environment_variables: true
+2025-11-18T18:00:31.1435312Z   universe: googleapis.com
+2025-11-18T18:00:31.1436030Z   cleanup_credentials: true
+2025-11-18T18:00:31.1437078Z   access_token_lifetime: 3600s
+2025-11-18T18:00:31.1438234Z   access_token_scopes: https://www.googleapis.com/auth/cloud-platform
+2025-11-18T18:00:31.1439414Z   id_token_include_email: false
+2025-11-18T18:00:31.1440131Z ##[endgroup]
+2025-11-18T18:00:31.3293899Z Created credentials file at "/home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json"
+2025-11-18T18:00:31.4092497Z ##[group]Run hashicorp/setup-terraform@v3
+2025-11-18T18:00:31.4093360Z with:
+2025-11-18T18:00:31.4093887Z   terraform_version: 1.5.0
+2025-11-18T18:00:31.4094701Z   cli_config_credentials_hostname: app.terraform.io
+2025-11-18T18:00:31.4095633Z   terraform_wrapper: true
+2025-11-18T18:00:31.4096260Z env:
+2025-11-18T18:00:31.4097475Z   CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE: /home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json
+2025-11-18T18:00:31.4099589Z   GOOGLE_APPLICATION_CREDENTIALS: /home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json
+2025-11-18T18:00:31.4101709Z   GOOGLE_GHA_CREDS_PATH: /home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json
+2025-11-18T18:00:31.4103064Z   CLOUDSDK_CORE_PROJECT: infra-474223
+2025-11-18T18:00:31.4103888Z   CLOUDSDK_PROJECT: infra-474223
+2025-11-18T18:00:31.4104640Z   GCLOUD_PROJECT: infra-474223
+2025-11-18T18:00:31.4105370Z   GCP_PROJECT: infra-474223
+2025-11-18T18:00:31.4106103Z   GOOGLE_CLOUD_PROJECT: infra-474223
+2025-11-18T18:00:31.4106889Z ##[endgroup]
+2025-11-18T18:00:31.9846685Z [command]/usr/bin/unzip -o -q /home/runner/work/_temp/90f2f8e7-3a44-40c1-8186-7959706395e6
+2025-11-18T18:00:32.4696692Z ##[group]Run terraform init
+2025-11-18T18:00:32.4697016Z [36;1mterraform init[0m
+2025-11-18T18:00:32.4734178Z shell: /usr/bin/bash -e {0}
+2025-11-18T18:00:32.4734432Z env:
+2025-11-18T18:00:32.4734839Z   CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE: /home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json
+2025-11-18T18:00:32.4735505Z   GOOGLE_APPLICATION_CREDENTIALS: /home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json
+2025-11-18T18:00:32.4736071Z   GOOGLE_GHA_CREDS_PATH: /home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json
+2025-11-18T18:00:32.4736476Z   CLOUDSDK_CORE_PROJECT: infra-474223
+2025-11-18T18:00:32.4736732Z   CLOUDSDK_PROJECT: infra-474223
+2025-11-18T18:00:32.4736968Z   GCLOUD_PROJECT: infra-474223
+2025-11-18T18:00:32.4737186Z   GCP_PROJECT: infra-474223
+2025-11-18T18:00:32.4737416Z   GOOGLE_CLOUD_PROJECT: infra-474223
+2025-11-18T18:00:32.4737769Z   TERRAFORM_CLI_PATH: /home/runner/work/_temp/82b13e71-73a8-43e7-99b1-8bb92f1f2167
+2025-11-18T18:00:32.4738168Z ##[endgroup]
+2025-11-18T18:00:34.1801071Z 
+2025-11-18T18:00:34.1802026Z [0m[1mInitializing the backend...[0m
+2025-11-18T18:00:34.4953095Z [0m[32m
+2025-11-18T18:00:34.4953680Z Successfully configured the backend "gcs"! Terraform will automatically
+2025-11-18T18:00:34.4954615Z use this backend unless the backend configuration changes.[0m
+2025-11-18T18:00:34.9040695Z [0m[1mInitializing modules...[0m
+2025-11-18T18:00:34.9053251Z - anthos_service_mesh in modules/anthos-service-mesh
+2025-11-18T18:00:34.9060983Z - certificate in modules/certificate
+2025-11-18T18:00:34.9065104Z - dns in modules/dns
+2025-11-18T18:00:34.9076819Z - gke_clusters in modules/gke
+2025-11-18T18:00:34.9087671Z - vpc in modules/vpc
+2025-11-18T18:00:34.9112200Z 
+2025-11-18T18:00:34.9112675Z [0m[1mInitializing provider plugins...[0m
+2025-11-18T18:00:34.9114583Z - Reusing previous version of hashicorp/google from the dependency lock file
+2025-11-18T18:00:35.0131158Z - Reusing previous version of hashicorp/google-beta from the dependency lock file
+2025-11-18T18:00:35.0309500Z - Reusing previous version of hashicorp/null from the dependency lock file
+2025-11-18T18:00:35.1158473Z - Installing hashicorp/google v7.11.0...
+2025-11-18T18:00:37.1837249Z - Installed hashicorp/google v7.11.0 (signed by HashiCorp)
+2025-11-18T18:00:37.2407869Z - Installing hashicorp/google-beta v7.11.0...
+2025-11-18T18:00:39.4177580Z - Installed hashicorp/google-beta v7.11.0 (signed by HashiCorp)
+2025-11-18T18:00:39.4798126Z - Installing hashicorp/null v3.2.4...
+2025-11-18T18:00:39.8609974Z - Installed hashicorp/null v3.2.4 (signed by HashiCorp)
+2025-11-18T18:00:39.8610412Z 
+2025-11-18T18:00:39.8611492Z Terraform has made some changes to the provider dependency selections recorded
+2025-11-18T18:00:39.8612339Z in the .terraform.lock.hcl file. Review those changes and commit them to your
+2025-11-18T18:00:39.8613121Z version control system if they represent changes you intended to make.
+2025-11-18T18:00:39.8613822Z 
+2025-11-18T18:00:39.8614652Z [0m[1m[32mTerraform has been successfully initialized![0m[32m[0m
+2025-11-18T18:00:39.8615236Z [0m[32m
+2025-11-18T18:00:39.8615737Z You may now begin working with Terraform. Try running "terraform plan" to see
+2025-11-18T18:00:39.8616534Z any changes that are required for your infrastructure. All Terraform commands
+2025-11-18T18:00:39.8617125Z should now work.
+2025-11-18T18:00:39.8617311Z 
+2025-11-18T18:00:39.8617607Z If you ever set or change modules or backend configuration for Terraform,
+2025-11-18T18:00:39.8618410Z rerun this command to reinitialize your working directory. If you forget, other
+2025-11-18T18:00:39.8619288Z commands will detect it and remind you to do so if necessary.[0m
+2025-11-18T18:00:39.9006260Z ##[group]Run actions/download-artifact@v4
+2025-11-18T18:00:39.9006550Z with:
+2025-11-18T18:00:39.9006736Z   name: terraform-plan
+2025-11-18T18:00:39.9006943Z   path: .
+2025-11-18T18:00:39.9007123Z   merge-multiple: false
+2025-11-18T18:00:39.9007332Z   repository: gabaws/infra
+2025-11-18T18:00:39.9007545Z   run-id: 19476151563
+2025-11-18T18:00:39.9007728Z env:
+2025-11-18T18:00:39.9008120Z   CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE: /home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json
+2025-11-18T18:00:39.9008783Z   GOOGLE_APPLICATION_CREDENTIALS: /home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json
+2025-11-18T18:00:39.9009364Z   GOOGLE_GHA_CREDS_PATH: /home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json
+2025-11-18T18:00:39.9009773Z   CLOUDSDK_CORE_PROJECT: infra-474223
+2025-11-18T18:00:39.9010043Z   CLOUDSDK_PROJECT: infra-474223
+2025-11-18T18:00:39.9010282Z   GCLOUD_PROJECT: infra-474223
+2025-11-18T18:00:39.9010710Z   GCP_PROJECT: infra-474223
+2025-11-18T18:00:39.9010981Z   GOOGLE_CLOUD_PROJECT: infra-474223
+2025-11-18T18:00:39.9011351Z   TERRAFORM_CLI_PATH: /home/runner/work/_temp/82b13e71-73a8-43e7-99b1-8bb92f1f2167
+2025-11-18T18:00:39.9011722Z ##[endgroup]
+2025-11-18T18:00:40.0923201Z Downloading single artifact
+2025-11-18T18:00:40.1890740Z Preparing to download the following artifacts:
+2025-11-18T18:00:40.1891861Z - terraform-plan (ID: 4605086666, Size: 66484, Expected Digest: sha256:d62af5d13d60fa465f40ed27000f0ec7d33337dd9b98280ab02c1b03fb171859)
+2025-11-18T18:00:40.2614335Z Redirecting to blob download url: https://productionresultssa11.blob.core.windows.net/actions-results/b1f2636f-c9fd-4082-8c01-a8b9496d0791/workflow-job-run-930da983-819a-5484-bc69-3ee6ae151c39/artifacts/50139db507f5f34a3c57abcde545e6993692b29de0068c14ed4fbabd9b58d549.zip
+2025-11-18T18:00:40.2616606Z Starting download of artifact to: /home/runner/work/infra/infra
+2025-11-18T18:00:40.2902832Z (node:2108) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2025-11-18T18:00:40.2904717Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2025-11-18T18:00:40.3000804Z SHA256 digest of downloaded artifact is d62af5d13d60fa465f40ed27000f0ec7d33337dd9b98280ab02c1b03fb171859
+2025-11-18T18:00:40.3002345Z Artifact download completed successfully.
+2025-11-18T18:00:40.3003151Z Total of 1 artifact(s) downloaded
+2025-11-18T18:00:40.3009685Z Download artifact has finished successfully
+2025-11-18T18:00:40.3125425Z ##[group]Run set -o pipefail
+2025-11-18T18:00:40.3125927Z [36;1mset -o pipefail[0m
+2025-11-18T18:00:40.3126318Z [36;1mset +e[0m
+2025-11-18T18:00:40.3126665Z [36;1mexport TF_LOG=ERROR[0m
+2025-11-18T18:00:40.3127079Z [36;1mmkdir -p logs[0m
+2025-11-18T18:00:40.3127693Z [36;1mterraform apply -auto-approve tfplan | tee logs/terraform-apply.log[0m
+2025-11-18T18:00:40.3128715Z [36;1mAPPLY_EXIT=${PIPESTATUS[0]}[0m
+2025-11-18T18:00:40.3129158Z [36;1mset -e[0m
+2025-11-18T18:00:40.3129517Z [36;1mif [ "$APPLY_EXIT" -ne 0 ]; then[0m
+2025-11-18T18:00:40.3130010Z [36;1m  echo "Terraform apply falhou." >&2[0m
+2025-11-18T18:00:40.3130491Z [36;1m  exit "$APPLY_EXIT"[0m
+2025-11-18T18:00:40.3131077Z [36;1mfi[0m
+2025-11-18T18:00:40.3175348Z shell: /usr/bin/bash -e {0}
+2025-11-18T18:00:40.3175583Z env:
+2025-11-18T18:00:40.3175992Z   CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE: /home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json
+2025-11-18T18:00:40.3176671Z   GOOGLE_APPLICATION_CREDENTIALS: /home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json
+2025-11-18T18:00:40.3177248Z   GOOGLE_GHA_CREDS_PATH: /home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json
+2025-11-18T18:00:40.3177653Z   CLOUDSDK_CORE_PROJECT: infra-474223
+2025-11-18T18:00:40.3177904Z   CLOUDSDK_PROJECT: infra-474223
+2025-11-18T18:00:40.3178141Z   GCLOUD_PROJECT: infra-474223
+2025-11-18T18:00:40.3178365Z   GCP_PROJECT: infra-474223
+2025-11-18T18:00:40.3178587Z   GOOGLE_CLOUD_PROJECT: infra-474223
+2025-11-18T18:00:40.3178956Z   TERRAFORM_CLI_PATH: /home/runner/work/_temp/82b13e71-73a8-43e7-99b1-8bb92f1f2167
+2025-11-18T18:00:40.3179353Z ##[endgroup]
+2025-11-18T18:00:43.2020455Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine][0m[0m
+2025-11-18T18:00:43.2030980Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine][0m[0m
+2025-11-18T18:00:53.2018793Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 10s elapsed][0m[0m
+2025-11-18T18:00:53.2038344Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 10s elapsed][0m[0m
+2025-11-18T18:01:03.2027645Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 20s elapsed][0m[0m
+2025-11-18T18:01:03.2047727Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 20s elapsed][0m[0m
+2025-11-18T18:01:13.2035258Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 30s elapsed][0m[0m
+2025-11-18T18:01:13.2055072Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 30s elapsed][0m[0m
+2025-11-18T18:01:23.2044586Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 40s elapsed][0m[0m
+2025-11-18T18:01:23.2064586Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 40s elapsed][0m[0m
+2025-11-18T18:01:33.2053248Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 50s elapsed][0m[0m
+2025-11-18T18:01:33.2073136Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 50s elapsed][0m[0m
+2025-11-18T18:01:43.2054357Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 1m0s elapsed][0m[0m
+2025-11-18T18:01:43.2083995Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 1m0s elapsed][0m[0m
+2025-11-18T18:01:53.2060093Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 1m10s elapsed][0m[0m
+2025-11-18T18:01:53.2090137Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 1m10s elapsed][0m[0m
+2025-11-18T18:02:03.2070886Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 1m20s elapsed][0m[0m
+2025-11-18T18:02:03.2101538Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 1m20s elapsed][0m[0m
+2025-11-18T18:02:13.2075493Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 1m30s elapsed][0m[0m
+2025-11-18T18:02:13.2106264Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 1m30s elapsed][0m[0m
+2025-11-18T18:02:23.2084433Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 1m40s elapsed][0m[0m
+2025-11-18T18:02:23.2115555Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 1m40s elapsed][0m[0m
+2025-11-18T18:02:33.2092776Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 1m50s elapsed][0m[0m
+2025-11-18T18:02:33.2122524Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 1m50s elapsed][0m[0m
+2025-11-18T18:02:43.2095804Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 2m0s elapsed][0m[0m
+2025-11-18T18:02:43.2127982Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 2m0s elapsed][0m[0m
+2025-11-18T18:02:53.2102235Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 2m10s elapsed][0m[0m
+2025-11-18T18:02:53.2132839Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 2m10s elapsed][0m[0m
+2025-11-18T18:03:03.2108591Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 2m20s elapsed][0m[0m
+2025-11-18T18:03:03.2138784Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 2m20s elapsed][0m[0m
+2025-11-18T18:03:13.2113175Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 2m30s elapsed][0m[0m
+2025-11-18T18:03:13.2143480Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 2m30s elapsed][0m[0m
+2025-11-18T18:03:23.2122299Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 2m40s elapsed][0m[0m
+2025-11-18T18:03:23.2153024Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 2m40s elapsed][0m[0m
+2025-11-18T18:03:33.2133275Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 2m50s elapsed][0m[0m
+2025-11-18T18:03:33.2163810Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 2m50s elapsed][0m[0m
+2025-11-18T18:03:43.2143905Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 3m0s elapsed][0m[0m
+2025-11-18T18:03:43.2174259Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 3m0s elapsed][0m[0m
+2025-11-18T18:03:53.2153600Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 3m10s elapsed][0m[0m
+2025-11-18T18:03:53.2183660Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 3m10s elapsed][0m[0m
+2025-11-18T18:04:03.2156968Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 3m20s elapsed][0m[0m
+2025-11-18T18:04:03.2187021Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 3m20s elapsed][0m[0m
+2025-11-18T18:04:13.2161195Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 3m30s elapsed][0m[0m
+2025-11-18T18:04:13.2191271Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 3m30s elapsed][0m[0m
+2025-11-18T18:04:23.2163379Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 3m40s elapsed][0m[0m
+2025-11-18T18:04:23.2193676Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 3m40s elapsed][0m[0m
+2025-11-18T18:04:33.2164148Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 3m50s elapsed][0m[0m
+2025-11-18T18:04:33.2204465Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 3m50s elapsed][0m[0m
+2025-11-18T18:04:43.2166349Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 4m0s elapsed][0m[0m
+2025-11-18T18:04:43.2213808Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 4m0s elapsed][0m[0m
+2025-11-18T18:04:53.2171782Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 4m10s elapsed][0m[0m
+2025-11-18T18:04:53.2222031Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 4m10s elapsed][0m[0m
+2025-11-18T18:05:03.2180873Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 4m20s elapsed][0m[0m
+2025-11-18T18:05:03.2231583Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 4m20s elapsed][0m[0m
+2025-11-18T18:05:13.2190808Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 4m30s elapsed][0m[0m
+2025-11-18T18:05:13.2241997Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 4m30s elapsed][0m[0m
+2025-11-18T18:05:23.2196303Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 4m40s elapsed][0m[0m
+2025-11-18T18:05:23.2247179Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 4m40s elapsed][0m[0m
+2025-11-18T18:05:33.2205714Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 4m50s elapsed][0m[0m
+2025-11-18T18:05:33.2256885Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 4m50s elapsed][0m[0m
+2025-11-18T18:05:43.2211253Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 5m0s elapsed][0m[0m
+2025-11-18T18:05:43.2262037Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 5m0s elapsed][0m[0m
+2025-11-18T18:05:53.2215404Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 5m10s elapsed][0m[0m
+2025-11-18T18:05:53.2265567Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 5m10s elapsed][0m[0m
+2025-11-18T18:06:03.2224984Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 5m20s elapsed][0m[0m
+2025-11-18T18:06:03.2275063Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 5m20s elapsed][0m[0m
+2025-11-18T18:06:13.2226342Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 5m30s elapsed][0m[0m
+2025-11-18T18:06:13.2276625Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 5m30s elapsed][0m[0m
+2025-11-18T18:06:23.2231939Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 5m40s elapsed][0m[0m
+2025-11-18T18:06:23.2282494Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 5m40s elapsed][0m[0m
+2025-11-18T18:06:33.2239446Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 5m50s elapsed][0m[0m
+2025-11-18T18:06:33.2289705Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 5m50s elapsed][0m[0m
+2025-11-18T18:06:43.2248604Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 6m0s elapsed][0m[0m
+2025-11-18T18:06:43.2299175Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 6m0s elapsed][0m[0m
+2025-11-18T18:06:53.2254636Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 6m10s elapsed][0m[0m
+2025-11-18T18:06:53.2305187Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 6m10s elapsed][0m[0m
+2025-11-18T18:07:03.2264648Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 6m20s elapsed][0m[0m
+2025-11-18T18:07:03.2315536Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 6m20s elapsed][0m[0m
+2025-11-18T18:07:13.2273369Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 6m30s elapsed][0m[0m
+2025-11-18T18:07:13.2323768Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 6m30s elapsed][0m[0m
+2025-11-18T18:07:23.2279668Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 6m40s elapsed][0m[0m
+2025-11-18T18:07:23.2330034Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 6m40s elapsed][0m[0m
+2025-11-18T18:07:33.2288999Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 6m50s elapsed][0m[0m
+2025-11-18T18:07:33.2339532Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 6m50s elapsed][0m[0m
+2025-11-18T18:07:43.2295653Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 7m0s elapsed][0m[0m
+2025-11-18T18:07:43.2346808Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 7m0s elapsed][0m[0m
+2025-11-18T18:07:53.2345797Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 7m10s elapsed][0m[0m
+2025-11-18T18:07:53.2357052Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 7m10s elapsed][0m[0m
+2025-11-18T18:08:03.2303066Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 7m20s elapsed][0m[0m
+2025-11-18T18:08:03.2363800Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 7m20s elapsed][0m[0m
+2025-11-18T18:08:13.2310783Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 7m30s elapsed][0m[0m
+2025-11-18T18:08:13.2371441Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 7m30s elapsed][0m[0m
+2025-11-18T18:08:23.2321460Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 7m40s elapsed][0m[0m
+2025-11-18T18:08:23.2382248Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 7m40s elapsed][0m[0m
+2025-11-18T18:08:33.2322762Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 7m50s elapsed][0m[0m
+2025-11-18T18:08:33.2391923Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 7m50s elapsed][0m[0m
+2025-11-18T18:08:43.2327616Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 8m0s elapsed][0m[0m
+2025-11-18T18:08:43.2399537Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 8m0s elapsed][0m[0m
+2025-11-18T18:08:53.2336654Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 8m10s elapsed][0m[0m
+2025-11-18T18:08:53.2407988Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 8m10s elapsed][0m[0m
+2025-11-18T18:09:03.2344950Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 8m20s elapsed][0m[0m
+2025-11-18T18:09:03.2415903Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 8m20s elapsed][0m[0m
+2025-11-18T18:09:13.2353531Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 8m30s elapsed][0m[0m
+2025-11-18T18:09:13.2425518Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 8m30s elapsed][0m[0m
+2025-11-18T18:09:23.2360262Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 8m40s elapsed][0m[0m
+2025-11-18T18:09:23.2431357Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 8m40s elapsed][0m[0m
+2025-11-18T18:09:33.2367608Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 8m50s elapsed][0m[0m
+2025-11-18T18:09:33.2437837Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 8m50s elapsed][0m[0m
+2025-11-18T18:09:43.2374369Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine, 9m0s elapsed][0m[0m
+2025-11-18T18:09:43.2444993Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 9m0s elapsed][0m[0m
+2025-11-18T18:09:46.9941176Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["app-engine"]: Modifications complete after 9m4s [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine][0m
+2025-11-18T18:09:53.2452269Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 9m10s elapsed][0m[0m
+2025-11-18T18:10:03.2459665Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 9m20s elapsed][0m[0m
+2025-11-18T18:10:13.2461690Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine, 9m30s elapsed][0m[0m
+2025-11-18T18:10:18.3069731Z [0m[1mmodule.gke_clusters.google_container_cluster.clusters["master-engine"]: Modifications complete after 9m35s [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine][0m
+2025-11-18T18:10:18.5299560Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Modifying... [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine/nodePools/master-engine-node-pool][0m[0m
+2025-11-18T18:10:18.5328517Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Modifying... [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine/nodePools/app-engine-node-pool][0m[0m
+2025-11-18T18:10:28.5304651Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 10s elapsed][0m[0m
+2025-11-18T18:10:28.5334431Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 10s elapsed][0m[0m
+2025-11-18T18:10:38.5310833Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 20s elapsed][0m[0m
+2025-11-18T18:10:38.5340941Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 20s elapsed][0m[0m
+2025-11-18T18:10:48.5315314Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 30s elapsed][0m[0m
+2025-11-18T18:10:48.5347716Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 30s elapsed][0m[0m
+2025-11-18T18:10:58.5316468Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 40s elapsed][0m[0m
+2025-11-18T18:10:58.5346161Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 40s elapsed][0m[0m
+2025-11-18T18:11:08.5318779Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 50s elapsed][0m[0m
+2025-11-18T18:11:08.5349467Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 50s elapsed][0m[0m
+2025-11-18T18:11:18.5325340Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 1m0s elapsed][0m[0m
+2025-11-18T18:11:18.5356284Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 1m0s elapsed][0m[0m
+2025-11-18T18:11:28.5328825Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 1m10s elapsed][0m[0m
+2025-11-18T18:11:28.5358745Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 1m10s elapsed][0m[0m
+2025-11-18T18:11:38.5335019Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 1m20s elapsed][0m[0m
+2025-11-18T18:11:38.5365578Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 1m20s elapsed][0m[0m
+2025-11-18T18:11:48.5343892Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 1m30s elapsed][0m[0m
+2025-11-18T18:11:48.5374809Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 1m30s elapsed][0m[0m
+2025-11-18T18:11:58.5347992Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 1m40s elapsed][0m[0m
+2025-11-18T18:11:58.5378778Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 1m40s elapsed][0m[0m
+2025-11-18T18:12:08.5350428Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 1m50s elapsed][0m[0m
+2025-11-18T18:12:08.5380939Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 1m50s elapsed][0m[0m
+2025-11-18T18:12:18.5358672Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 2m0s elapsed][0m[0m
+2025-11-18T18:12:18.5388851Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 2m0s elapsed][0m[0m
+2025-11-18T18:12:28.5362729Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 2m10s elapsed][0m[0m
+2025-11-18T18:12:28.5393074Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 2m10s elapsed][0m[0m
+2025-11-18T18:12:38.5369212Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 2m20s elapsed][0m[0m
+2025-11-18T18:12:38.5399648Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 2m20s elapsed][0m[0m
+2025-11-18T18:12:48.5375090Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 2m30s elapsed][0m[0m
+2025-11-18T18:12:48.5404847Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 2m30s elapsed][0m[0m
+2025-11-18T18:12:58.5376534Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 2m40s elapsed][0m[0m
+2025-11-18T18:12:58.5406721Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 2m40s elapsed][0m[0m
+2025-11-18T18:13:08.5378380Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 2m50s elapsed][0m[0m
+2025-11-18T18:13:08.5409158Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 2m50s elapsed][0m[0m
+2025-11-18T18:13:18.5385230Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 3m0s elapsed][0m[0m
+2025-11-18T18:13:18.5416081Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 3m0s elapsed][0m[0m
+2025-11-18T18:13:28.5389920Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 3m10s elapsed][0m[0m
+2025-11-18T18:13:28.5420773Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 3m10s elapsed][0m[0m
+2025-11-18T18:13:38.5392136Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 3m20s elapsed][0m[0m
+2025-11-18T18:13:38.5422511Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 3m20s elapsed][0m[0m
+2025-11-18T18:13:48.5397012Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 3m30s elapsed][0m[0m
+2025-11-18T18:13:48.5427335Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 3m30s elapsed][0m[0m
+2025-11-18T18:13:58.5401694Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 3m40s elapsed][0m[0m
+2025-11-18T18:13:58.5431637Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 3m40s elapsed][0m[0m
+2025-11-18T18:14:08.5403155Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 3m50s elapsed][0m[0m
+2025-11-18T18:14:08.5432590Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 3m50s elapsed][0m[0m
+2025-11-18T18:14:18.5410883Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 4m0s elapsed][0m[0m
+2025-11-18T18:14:18.5441817Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Still modifying... [id=projects/infra-474223/locations/us-east...-engine/nodePools/app-engine-node-pool, 4m0s elapsed][0m[0m
+2025-11-18T18:14:20.6565389Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["app-engine"]: Modifications complete after 4m2s [id=projects/infra-474223/locations/us-east1-b/clusters/app-engine/nodePools/app-engine-node-pool][0m
+2025-11-18T18:14:28.5416795Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Still modifying... [id=projects/infra-474223/locations/us-cent...gine/nodePools/master-engine-node-pool, 4m10s elapsed][0m[0m
+2025-11-18T18:14:31.0686560Z [0m[1mmodule.gke_clusters.google_container_node_pool.node_pools["master-engine"]: Modifications complete after 4m12s [id=projects/infra-474223/locations/us-central1-a/clusters/master-engine/nodePools/master-engine-node-pool][0m
+2025-11-18T18:14:31.0808588Z [0m[1mmodule.anthos_service_mesh.google_gke_hub_feature.multicluster_ingress: Creating...[0m[0m
+2025-11-18T18:14:32.2594995Z 2025-11-18T18:14:32.258Z [ERROR] provider.terraform-provider-google_v7.11.0_x5: Response contains error diagnostic: diagnostic_detail= diagnostic_severity=ERROR tf_proto_version=5.9 @caller=github.com/hashicorp/terraform-plugin-go@v0.28.0/tfprotov5/internal/diag/diagnostics.go:58 @module=sdk.proto tf_resource_type=google_gke_hub_feature tf_rpc=ApplyResourceChange diagnostic_summary="Error creating Feature: googleapi: Error 400: InvalidValueError for field config_membership: Membership "" does not exist
+2025-11-18T18:14:32.2598154Z Details:
+2025-11-18T18:14:32.2598401Z [
+2025-11-18T18:14:32.2598651Z   {
+2025-11-18T18:14:32.2598981Z     "@type": "type.googleapis.com/google.rpc.RequestInfo",
+2025-11-18T18:14:32.2599459Z     "requestId": "53c048158ab4b5fa"
+2025-11-18T18:14:32.2599786Z   }
+2025-11-18T18:14:32.2600708Z ]" tf_provider_addr=registry.terraform.io/hashicorp/google tf_req_id=6a646f11-487a-64d7-189c-124fb9f89eac timestamp=2025-11-18T18:14:32.258Z
+2025-11-18T18:14:32.2602770Z 2025-11-18T18:14:32.259Z [ERROR] vertex "module.anthos_service_mesh.google_gke_hub_feature.multicluster_ingress" error: Error creating Feature: googleapi: Error 400: InvalidValueError for field config_membership: Membership "" does not exist
+2025-11-18T18:14:32.2603880Z Details:
+2025-11-18T18:14:32.2604074Z [
+2025-11-18T18:14:32.2604332Z   {
+2025-11-18T18:14:32.2604566Z     "@type": "type.googleapis.com/google.rpc.RequestInfo",
+2025-11-18T18:14:32.2605145Z     "requestId": "53c048158ab4b5fa"
+2025-11-18T18:14:32.2605394Z   }
+2025-11-18T18:14:32.2605545Z ]
+2025-11-18T18:14:32.4259328Z [31m╷[0m[0m
+2025-11-18T18:14:32.4260768Z [31m│[0m [0m[1m[31mError: [0m[0m[1mError creating Feature: googleapi: Error 400: InvalidValueError for field config_membership: Membership "" does not exist
+2025-11-18T18:14:32.4261918Z [31m│[0m [0mDetails:
+2025-11-18T18:14:32.4262259Z [31m│[0m [0m[
+2025-11-18T18:14:32.4262591Z [31m│[0m [0m  {
+2025-11-18T18:14:32.4263000Z [31m│[0m [0m    "@type": "type.googleapis.com/google.rpc.RequestInfo",
+2025-11-18T18:14:32.4263493Z [31m│[0m [0m    "requestId": "53c048158ab4b5fa"
+2025-11-18T18:14:32.4263872Z [31m│[0m [0m  }
+2025-11-18T18:14:32.4264121Z [31m│[0m [0m][0m
+2025-11-18T18:14:32.4264374Z [31m│[0m [0m
+2025-11-18T18:14:32.4264888Z [31m│[0m [0m[0m  with module.anthos_service_mesh.google_gke_hub_feature.multicluster_ingress,
+2025-11-18T18:14:32.4265820Z [31m│[0m [0m  on modules/anthos-service-mesh/main.tf line 83, in resource "google_gke_hub_feature" "multicluster_ingress":
+2025-11-18T18:14:32.4266686Z [31m│[0m [0m  83: resource "google_gke_hub_feature" "multicluster_ingress" [4m{[0m[0m
+2025-11-18T18:14:32.4267163Z [31m│[0m [0m
+2025-11-18T18:14:32.4267400Z [31m╵[0m[0m
+2025-11-18T18:14:32.5197150Z ##[error]Terraform exited with code 1.
+2025-11-18T18:14:32.5215186Z Terraform apply falhou.
+2025-11-18T18:14:32.5220376Z ##[error]Process completed with exit code 1.
+2025-11-18T18:14:32.5258586Z ##[group]Run if compgen -G "logs/*.log" > /dev/null; then
+2025-11-18T18:14:32.5258966Z [36;1mif compgen -G "logs/*.log" > /dev/null; then[0m
+2025-11-18T18:14:32.5259286Z [36;1m  echo "Logs disponíveis para análise."[0m
+2025-11-18T18:14:32.5259553Z [36;1melse[0m
+2025-11-18T18:14:32.5259827Z [36;1m  echo "Nenhum log gerado para análise."[0m
+2025-11-18T18:14:32.5260194Z [36;1mfi[0m
+2025-11-18T18:14:32.5292066Z shell: /usr/bin/bash -e {0}
+2025-11-18T18:14:32.5292285Z env:
+2025-11-18T18:14:32.5292672Z   CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE: /home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json
+2025-11-18T18:14:32.5293309Z   GOOGLE_APPLICATION_CREDENTIALS: /home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json
+2025-11-18T18:14:32.5293854Z   GOOGLE_GHA_CREDS_PATH: /home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json
+2025-11-18T18:14:32.5294248Z   CLOUDSDK_CORE_PROJECT: infra-474223
+2025-11-18T18:14:32.5294497Z   CLOUDSDK_PROJECT: infra-474223
+2025-11-18T18:14:32.5294754Z   GCLOUD_PROJECT: infra-474223
+2025-11-18T18:14:32.5294976Z   GCP_PROJECT: infra-474223
+2025-11-18T18:14:32.5295198Z   GOOGLE_CLOUD_PROJECT: infra-474223
+2025-11-18T18:14:32.5295562Z   TERRAFORM_CLI_PATH: /home/runner/work/_temp/82b13e71-73a8-43e7-99b1-8bb92f1f2167
+2025-11-18T18:14:32.5295920Z ##[endgroup]
+2025-11-18T18:14:32.5345431Z Logs disponíveis para análise.
+2025-11-18T18:14:32.5379382Z ##[group]Run actions/upload-artifact@v4
+2025-11-18T18:14:32.5379650Z with:
+2025-11-18T18:14:32.5379823Z   name: terraform-logs
+2025-11-18T18:14:32.5380026Z   path: logs
+2025-11-18T18:14:32.5380210Z   if-no-files-found: ignore
+2025-11-18T18:14:32.5380417Z   compression-level: 6
+2025-11-18T18:14:32.5380848Z   overwrite: false
+2025-11-18T18:14:32.5381040Z   include-hidden-files: false
+2025-11-18T18:14:32.5381248Z env:
+2025-11-18T18:14:32.5381613Z   CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE: /home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json
+2025-11-18T18:14:32.5382220Z   GOOGLE_APPLICATION_CREDENTIALS: /home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json
+2025-11-18T18:14:32.5382762Z   GOOGLE_GHA_CREDS_PATH: /home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json
+2025-11-18T18:14:32.5383213Z   CLOUDSDK_CORE_PROJECT: infra-474223
+2025-11-18T18:14:32.5383479Z   CLOUDSDK_PROJECT: infra-474223
+2025-11-18T18:14:32.5383710Z   GCLOUD_PROJECT: infra-474223
+2025-11-18T18:14:32.5383958Z   GCP_PROJECT: infra-474223
+2025-11-18T18:14:32.5384174Z   GOOGLE_CLOUD_PROJECT: infra-474223
+2025-11-18T18:14:32.5384518Z   TERRAFORM_CLI_PATH: /home/runner/work/_temp/82b13e71-73a8-43e7-99b1-8bb92f1f2167
+2025-11-18T18:14:32.5385042Z ##[endgroup]
+2025-11-18T18:14:32.7493848Z With the provided path, there will be 1 file uploaded
+2025-11-18T18:14:32.7499513Z Artifact name is valid!
+2025-11-18T18:14:32.7500750Z Root directory input is valid!
+2025-11-18T18:14:32.8563559Z Beginning upload of artifact content to blob storage
+2025-11-18T18:14:32.9186552Z Uploaded bytes 1139
+2025-11-18T18:14:32.9368906Z Finished uploading artifact content to blob storage!
+2025-11-18T18:14:32.9373397Z SHA256 digest of uploaded artifact zip is bbb1a601a3db02a1c143a3b4474ea1cbd64f4c31078916dfb2e95ba40e6fa131
+2025-11-18T18:14:32.9375654Z Finalizing artifact upload
+2025-11-18T18:14:33.0349986Z Artifact terraform-logs.zip successfully finalized. Artifact ID 4605251715
+2025-11-18T18:14:33.0351071Z Artifact terraform-logs has been successfully uploaded! Final size is 1139 bytes. Artifact ID is 4605251715
+2025-11-18T18:14:33.0357717Z Artifact download URL: https://github.com/gabaws/infra/actions/runs/19476151563/artifacts/4605251715
+2025-11-18T18:14:33.0483406Z Post job cleanup.
+2025-11-18T18:14:33.1287788Z Removed exported credentials at "/home/runner/work/infra/infra/gha-creds-87cb1ce31808a3d9.json".
+2025-11-18T18:14:33.1394334Z Post job cleanup.
+2025-11-18T18:14:33.2324828Z [command]/usr/bin/git version
+2025-11-18T18:14:33.2361581Z git version 2.51.2
+2025-11-18T18:14:33.2404852Z Temporarily overriding HOME='/home/runner/work/_temp/c1529503-07e4-41f0-891d-bf67ddb42eed' before making global git config changes
+2025-11-18T18:14:33.2406117Z Adding repository directory to the temporary git global config as a safe directory
+2025-11-18T18:14:33.2411376Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/infra/infra
+2025-11-18T18:14:33.2450951Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-11-18T18:14:33.2489221Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-11-18T18:14:33.2741840Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-11-18T18:14:33.2768348Z http.https://github.com/.extraheader
+2025-11-18T18:14:33.2781268Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2025-11-18T18:14:33.2814979Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-11-18T18:14:33.3164533Z Cleaning up orphan processes

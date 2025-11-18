@@ -18,18 +18,8 @@ output "membership_names" {
   sensitive   = true
 }
 
-output "multicluster_ingress_status" {
-  description = "Status of Multi-cluster Ingress feature"
-  value = {
-    feature_state = google_gke_hub_feature.multicluster_ingress.state
-    memberships = {
-      for k, v in google_gke_hub_feature_membership.multicluster_ingress_membership : k => {
-        membership = v.membership
-      }
-    }
-  }
-  sensitive = true
-}
+# Multi-cluster Ingress output removed - feature must be enabled manually
+# See main.tf for instructions on how to enable via gcloud
 
 output "membership_ids" {
   description = "Membership IDs for multi-cluster configuration"
