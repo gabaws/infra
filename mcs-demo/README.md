@@ -7,23 +7,32 @@ Demonstração de comunicação entre serviços em diferentes clusters GKE usand
 ```
 mcs-demo/
 ├── README.md
+├── docs/
+│   ├── Arquitetura.md              # Documentação da arquitetura MCS + ASM
+│   └── teste_sem_mcs.md            # Guia para teste sem MCS (ASM-only)
 ├── scripts/
 │   ├── deploy.sh                    # Script de deploy automatizado
 │   ├── test-communication.sh        # Script de teste de comunicação
-│   ├── diagnose-pending-pods.sh    # Script de diagnóstico de pods pendentes
-│   ├── check-metrics.sh            # Script para verificar métricas
-│   └── check-telemetry.sh          # Script para verificar telemetria
+│   ├── test-asm-multicluster-only.sh # Script de teste sem MCS
+│   ├── setup-asm-multicluster-only.sh # Script de setup sem MCS
+│   ├── fix-node-pool-scaling.sh     # Script para corrigir scaling de nodes
+│   ├── force-rollout.sh            # Script para forçar rollout
+│   └── check-pods.sh               # Script para verificar pods em ambos clusters
 ├── app-engine/                      # Aplicação no cluster app-engine
 │   ├── namespace.yaml
 │   ├── deployment.yaml
 │   ├── service.yaml
 │   ├── service-export.yaml
+│   ├── serviceentry-master.yaml    # ServiceEntry para comunicação sem MCS
+│   ├── virtualservice-master.yaml  # VirtualService para comunicação sem MCS
 │   └── kustomization.yaml
 └── master-engine/                   # Aplicação no cluster master-engine
     ├── namespace.yaml
     ├── deployment.yaml
     ├── service.yaml
     ├── service-export.yaml
+    ├── serviceentry-app.yaml       # ServiceEntry para comunicação sem MCS
+    ├── virtualservice-app.yaml     # VirtualService para comunicação sem MCS
     └── kustomization.yaml
 ```
 
@@ -88,7 +97,7 @@ Teste de comunicação usando apenas ASM Multi-cluster (ServiceEntry + VirtualSe
 - **Com MCS**: Usa `service.namespace.svc.clusterset.local` (automático)
 - **Sem MCS**: Usa `service-remote.namespace.svc.cluster.local` (manual)
 
-Veja [docs/TESTE_ASM_SEM_MCS.md](./docs/TESTE_ASM_SEM_MCS.md) para mais detalhes.
+Veja [docs/teste_sem_mcs.md](./docs/teste_sem_mcs.md) para mais detalhes.
 
 ### Teste Manual
 
@@ -111,8 +120,33 @@ kubectl run test-pod --image=curlimages/curl:latest --rm -it --restart=Never -n 
 ### Verificar Pods (deve mostrar 2/2: app + istio-proxy)
 
 ```bash
+# Verificar pods em ambos os clusters
 kubectl get pods -n mcs-demo --context=gke_infra-474223_us-east1-b_app-engine
 kubectl get pods -n mcs-demo --context=gke_infra-474223_us-central1-a_master-engine
+
+# Ou usar o script de verificação
+./scripts/check-pods.sh
+```
+
+### Acessar Pods para Debug
+
+**⚠️ Motivo do problema**: Os pods têm 2 containers (`hello-server` e `istio-proxy`). Sem especificar o container com `-c`, o kubectl não sabe em qual container executar e o comando trava.
+
+**Comandos corretos:**
+
+```bash
+# 1. Especificar o container com -c e usar -it (interactive + tty)
+kubectl exec -n mcs-demo -it <pod-name> --context=gke_infra-474223_us-east1-b_app-engine -c hello-server -- /bin/bash
+
+# 2. Se bash não funcionar, usar sh
+kubectl exec -n mcs-demo -it <pod-name> --context=gke_infra-474223_us-east1-b_app-engine -c hello-server -- /bin/sh
+
+# 3. Para acessar o sidecar istio-proxy (se necessário)
+kubectl exec -n mcs-demo -it <pod-name> --context=gke_infra-474223_us-east1-b_app-engine -c istio-proxy -- /bin/sh
+
+# Verificar containers no pod
+kubectl get pod <pod-name> -n mcs-demo --context=<contexto> -o jsonpath='{.spec.containers[*].name}'
+# Deve mostrar: hello-server istio-proxy
 ```
 
 ### Verificar ServiceExports
@@ -143,23 +177,26 @@ Exemplos:
 
 ## 🔍 Troubleshooting
 
-Consulte [docs/TROUBLESHOOTING_MCS.md](./docs/TROUBLESHOOTING_MCS.md) para problemas comuns e soluções.
-
 ### Diagnóstico de Pods Pendentes
 
-Se os pods estiverem em estado `Pending`, execute o script de diagnóstico:
+Se os pods estiverem em estado `Pending`, verifique:
 
 ```bash
-./scripts/diagnose-pending-pods.sh
-```
+# Verificar nós disponíveis
+kubectl get nodes --context=<contexto>
 
-Este script verifica:
-- Nós disponíveis no cluster
-- Status e eventos dos pods pendentes
-- Recursos disponíveis (CPU/memória)
-- Taints e tolerations
-- Node selectors
-- Requests/limits dos pods
+# Verificar status e eventos dos pods pendentes
+kubectl describe pod <pod-name> -n mcs-demo --context=<contexto>
+
+# Verificar recursos disponíveis (CPU/memória)
+kubectl top nodes --context=<contexto>
+
+# Verificar taints e tolerations
+kubectl describe node <node-name> --context=<contexto> | grep -A 5 Taints
+
+# Verificar requests/limits dos pods
+kubectl get pod <pod-name> -n mcs-demo --context=<contexto> -o jsonpath='{.spec.containers[*].resources}'
+```
 
 ### Resolvendo Problemas de CPU Insuficiente
 
@@ -209,15 +246,24 @@ Se ainda houver problemas, você pode reduzir ainda mais os recursos nos arquivo
 ### Verificações Rápidas
 
 ```bash
+# Verificar pods em ambos os clusters
+./scripts/check-pods.sh
+
 # Verificar status do ServiceExport
-kubectl describe serviceexport hello-app-engine -n mcs-demo --context=<contexto>
+kubectl describe serviceexport hello-app-engine -n mcs-demo --context=gke_infra-474223_us-east1-b_app-engine
+kubectl describe serviceexport hello-master-engine -n mcs-demo --context=gke_infra-474223_us-central1-a_master-engine
 
 # Verificar ServiceImports (criados automaticamente)
-kubectl get serviceimport -n mcs-demo --context=<contexto>
+kubectl get serviceimport -n mcs-demo --context=gke_infra-474223_us-east1-b_app-engine
+kubectl get serviceimport -n mcs-demo --context=gke_infra-474223_us-central1-a_master-engine
 
 # Verificar sidecar injection
 kubectl get pod <pod-name> -n mcs-demo --context=<contexto> -o jsonpath='{.spec.containers[*].name}'
 # Deve mostrar: hello-server istio-proxy
+
+# Acessar pod para testes (usar contexto correto)
+kubectl exec -n mcs-demo -it <pod-name> --context=gke_infra-474223_us-east1-b_app-engine -- /bin/bash
+kubectl exec -n mcs-demo -it <pod-name> --context=gke_infra-474223_us-central1-a_master-engine -- /bin/bash
 
 # Verificar eventos de um pod pendente
 kubectl describe pod <pod-name> -n mcs-demo --context=<contexto>
@@ -226,7 +272,16 @@ kubectl describe pod <pod-name> -n mcs-demo --context=<contexto>
 kubectl get events -n mcs-demo --context=<contexto> --sort-by='.lastTimestamp'
 ```
 
-## 📚 Referências
+## 📚 Documentação
+
+### Documentação do Projeto
+
+- [Arquitetura MCS + ASM](./docs/Arquitetura.md) - Documentação completa da arquitetura, componentes e fluxos
+- [Teste sem MCS (ASM-only)](./docs/teste_sem_mcs.md) - Guia para comunicação multi-cluster usando apenas ASM
+
+### Referências Externas
 
 - [Multi-cluster Services Documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/multi-cluster-services)
 - [Anthos Service Mesh Multi-cluster](https://cloud.google.com/service-mesh/docs/multicluster-setup)
+- [Istio Architecture](https://istio.io/latest/docs/ops/deployment/architecture/)
+- [Kubernetes Services](https://kubernetes.io/docs/concepts/services-networking/service/)

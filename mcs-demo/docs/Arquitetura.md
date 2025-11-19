@@ -153,28 +153,28 @@ Esta arquitetura implementa comunicação entre serviços distribuídos em múlt
 │                    │    │ (Control Plane)  │                                │
 │                    │    └──────────────────┘                                │
 │                    │              │                                         │
-│                    └──────────────┼────────────────────────┐              │
-│                                   │                        │              │
-│                                   ▼                        ▼              │
-│                    ┌──────────────────────────────┐                       │
-│                    │  Service A (ClusterIP)       │                       │
-│                    │  hello-app-engine            │                       │
-│                    └──────────────────────────────┘                       │
-│                                   │                                        │
-│                                   │ DNS Query                              │
-│                                   ▼                                        │
-│                    ┌──────────────────────────────┐                       │
-│                    │  CoreDNS / kube-dns          │                       │
-│                    │  *.svc.cluster.local         │                       │
-│                    │  *.svc.clusterset.local      │                       │
-│                    └──────────────────────────────┘                       │
-│                                   │                                        │
-│                                   │ ServiceImport (gke-mcs-*)             │
-│                                   ▼                                        │
-│                    ┌──────────────────────────────┐                       │
-│                    │  MCS Endpoints (NEG)         │───► Traffic Director  │
-│                    │  (Sincronizado com GCP)      │    (Global LB)        │
-│                    └──────────────────────────────┘                       │
+│                    └──────────────┼────────────────────────┐                │
+│                                   │                        │                │
+│                                   ▼                        ▼                │
+│                    ┌──────────────────────────────┐                         │
+│                    │  Service A (ClusterIP)       │                         │
+│                    │  hello-app-engine            │                         │
+│                    └──────────────────────────────┘                         │
+│                                   │                                         │
+│                                   │ DNS Query                               │
+│                                   ▼                                         │
+│                    ┌──────────────────────────────┐                         │
+│                    │  CoreDNS / kube-dns          │                         │
+│                    │  *.svc.cluster.local         │                         │
+│                    │  *.svc.clusterset.local      │                         │
+│                    └──────────────────────────────┘                         │
+│                                   │                                         │
+│                                   │ ServiceImport (gke-mcs-*)               │
+│                                   ▼                                         │
+│                    ┌──────────────────────────────┐                         │
+│                    │  MCS Endpoints (NEG)         │───► Traffic Director    │
+│                    │  (Sincronizado com GCP)      │    (Global LB)          │
+│                    └──────────────────────────────┘                         │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
                                     ▲
@@ -201,20 +201,20 @@ Esta arquitetura implementa comunicação entre serviços distribuídos em múlt
 │                    │    └──────────────────┘                                │
 │                    │              │                                         │
 │                    └──────────────┼────────────────────────┐                │
-│                                   │                        │              │
-│                                   ▼                        ▼              │
-│                    ┌──────────────────────────────┐                       │
-│                    │  Service B (ClusterIP)       │                       │
-│                    │  hello-master-engine         │                       │
+│                                   │                        │                │
+│                                   ▼                        ▼                │
+│                    ┌──────────────────────────────┐                         │
+│                    │  Service B (ClusterIP)       │                         │
+│                    │  hello-master-engine         │                         │
 │                    └──────────────────────────────┘                         │
-│                                   │                                        │
-│                                   │ DNS Query                              │
-│                                   ▼                                        │
-│                    ┌──────────────────────────────┐                       │
-│                    │  CoreDNS / kube-dns          │                       │
-│                    │  *.svc.cluster.local         │                       │
-│                    │  *.svc.clusterset.local      │                       │
-│                    └──────────────────────────────┘                       │
+│                                   │                                         │
+│                                   │ DNS Query                               │
+│                                   ▼                                         │
+│                    ┌──────────────────────────────┐                         │
+│                    │  CoreDNS / kube-dns          │                         │
+│                    │  *.svc.cluster.local         │                         │
+│                    │  *.svc.clusterset.local      │                         │
+│                    └──────────────────────────────┘                         │
 │                                   │                                         │
 │                                   │ ServiceImport (gke-mcs-*)               │
 │                                   ▼                                         │
