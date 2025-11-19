@@ -20,13 +20,13 @@ output "subnets" {
 
 output "gke_clusters" {
   description = "GKE cluster information"
-  value       = module.gke_clusters.cluster_info
+  value       = var.enable_gke ? module.gke_clusters[0].cluster_info : null
   sensitive   = true
 }
 
 output "anthos_service_mesh_status" {
   description = "Anthos Service Mesh configuration status"
-  value       = module.anthos_service_mesh.mesh_status
+  value       = var.enable_asm && var.enable_gke ? module.anthos_service_mesh[0].mesh_status : null
   sensitive   = true
 }
 
@@ -35,17 +35,17 @@ output "anthos_service_mesh_status" {
 
 output "gke_hub_membership_ids" {
   description = "GKE Hub membership IDs for multi-cluster configuration"
-  value       = module.anthos_service_mesh.membership_ids
+  value       = var.enable_asm && var.enable_gke ? module.anthos_service_mesh[0].membership_ids : null
 }
 
 output "cluster_endpoints" {
   description = "GKE cluster endpoints"
-  value = {
-    for k, v in module.gke_clusters.cluster_info : k => {
+  value = var.enable_gke ? {
+    for k, v in module.gke_clusters[0].cluster_info : k => {
       endpoint   = v.endpoint
       cluster_ca = v.cluster_ca_certificate
     }
-  }
+  } : null
   sensitive = true
 }
 

@@ -81,3 +81,11 @@ gke_clusters = {
 # Domain Configuration
 domain_name = "cloudab.online"
 
+# Enable/Disable Modules
+# Set to false to disable GKE clusters (will also disable ASM)
+enable_gke = true
+
+# Set to false to disable Anthos Service Mesh
+# Note: ASM requires GKE to be enabled
+enable_asm = true
+

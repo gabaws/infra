@@ -139,3 +139,15 @@ variable "domain_name" {
   type        = string
   default     = "cloudab.online"
 }
+
+variable "enable_gke" {
+  description = "Habilita ou desabilita a criação dos clusters GKE"
+  type        = bool
+  default     = true
+}
+
+variable "enable_asm" {
+  description = "Habilita ou desabilita o Anthos Service Mesh"
+  type        = bool
+  default     = true
+}

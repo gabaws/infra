@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# Script para forçar rollout dos deployments após mudança de imagem
-
 set +e
 
 PROJECT_ID="infra-474223"

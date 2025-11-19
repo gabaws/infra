@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# Script para testar comunicação entre clusters usando Multi-cluster Services
-# Usa os pods existentes para testar comunicação
 
 set +e
 

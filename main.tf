@@ -58,6 +58,8 @@ module "vpc" {
 
 # GKE Clusters Module
 module "gke_clusters" {
+  count = var.enable_gke ? 1 : 0
+
   source = "./modules/gke"
 
   project_id = var.project_id
@@ -75,12 +77,14 @@ module "gke_clusters" {
 
 # Anthos Service Mesh Module (inclui configuração de multi-cluster)
 module "anthos_service_mesh" {
+  count = var.enable_asm && var.enable_gke ? 1 : 0
+
   source = "./modules/anthos-service-mesh"
 
   project_id = var.project_id
   region     = var.region
 
-  clusters = module.gke_clusters.cluster_registration_info
+  clusters = module.gke_clusters[0].cluster_registration_info
 
   depends_on = [
     google_project_service.required_apis,
