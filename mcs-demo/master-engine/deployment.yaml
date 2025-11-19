@@ -19,9 +19,8 @@ spec:
     spec:
       containers:
       - name: hello-server
-        image: gcr.io/google-samples/hello-app:1.0
+        image: nicolaka/netshoot:latest
         ports:
         - containerPort: 8080
-        env:
-        - name: PORT
-          value: "8080"
+        command: ["/bin/sh"]
+        args: ["-c", "echo '<html><body><h1>Hello from master-engine!</h1></body></html>' > /tmp/index.html && busybox httpd -f -p 8080 -h /tmp"]

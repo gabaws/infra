@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script para testar comunicação entre clusters usando Multi-cluster Services
-# Usa os pods existentes (hello-app-engine e hello-master-engine) para testar
+# Usa os pods existentes para testar comunicação
 
 set +e
 
@@ -50,28 +50,83 @@ echo ""
 echo "📋 Verificando ServiceImports (criados automaticamente pelo MCS)..."
 echo ""
 echo "Cluster $APP_ENGINE_CLUSTER:"
-kubectl get serviceimport -n mcs-demo --context=$APP_ENGINE_CTX 2>/dev/null || echo "  (Nenhum ServiceImport encontrado)"
+SERVICEIMPORTS_APP=$(kubectl get serviceimport -n mcs-demo --context=$APP_ENGINE_CTX 2>/dev/null)
+if [ -n "$SERVICEIMPORTS_APP" ]; then
+  echo "$SERVICEIMPORTS_APP"
+else
+  echo "  ⚠️  Nenhum ServiceImport encontrado"
+fi
 
 echo ""
 echo "Cluster $MASTER_ENGINE_CLUSTER:"
-kubectl get serviceimport -n mcs-demo --context=$MASTER_ENGINE_CTX 2>/dev/null || echo "  (Nenhum ServiceImport encontrado)"
+SERVICEIMPORTS_MASTER=$(kubectl get serviceimport -n mcs-demo --context=$MASTER_ENGINE_CTX 2>/dev/null)
+if [ -n "$SERVICEIMPORTS_MASTER" ]; then
+  echo "$SERVICEIMPORTS_MASTER"
+else
+  echo "  ⚠️  Nenhum ServiceImport encontrado"
+fi
 
 echo ""
 echo "📋 Verificando serviços MCS (gke-mcs-*)..."
 echo ""
 echo "Cluster $APP_ENGINE_CLUSTER:"
-kubectl get svc -n mcs-demo --context=$APP_ENGINE_CTX | grep gke-mcs || echo "  (Nenhum serviço MCS encontrado)"
+MCS_SERVICES_APP=$(kubectl get svc -n mcs-demo --context=$APP_ENGINE_CTX | grep gke-mcs || echo "")
+if [ -n "$MCS_SERVICES_APP" ]; then
+  echo "$MCS_SERVICES_APP"
+else
+  echo "  ⚠️  Nenhum serviço MCS encontrado"
+fi
 
 echo ""
 echo "Cluster $MASTER_ENGINE_CLUSTER:"
-kubectl get svc -n mcs-demo --context=$MASTER_ENGINE_CTX | grep gke-mcs || echo "  (Nenhum serviço MCS encontrado)"
+MCS_SERVICES_MASTER=$(kubectl get svc -n mcs-demo --context=$MASTER_ENGINE_CTX | grep gke-mcs || echo "")
+if [ -n "$MCS_SERVICES_MASTER" ]; then
+  echo "$MCS_SERVICES_MASTER"
+else
+  echo "  ⚠️  Nenhum serviço MCS encontrado"
+fi
+
+echo ""
+echo "📋 Verificando sidecar injection nos pods..."
+echo ""
+echo "Cluster $APP_ENGINE_CLUSTER:"
+APP_POD=$(kubectl get pods -n mcs-demo --context=$APP_ENGINE_CTX -l app=hello-app-engine -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+if [ -n "$APP_POD" ]; then
+  CONTAINERS=$(kubectl get pod $APP_POD -n mcs-demo --context=$APP_ENGINE_CTX -o jsonpath='{.spec.containers[*].name}' 2>/dev/null)
+  READY=$(kubectl get pod $APP_POD -n mcs-demo --context=$APP_ENGINE_CTX -o jsonpath='{.status.containerStatuses[*].ready}' 2>/dev/null)
+  echo "  Pod: $APP_POD"
+  echo "  Containers: $CONTAINERS"
+  echo "  Ready: $READY"
+  if echo "$CONTAINERS" | grep -q "istio-proxy"; then
+    echo "  ✅ Sidecar istio-proxy presente"
+  else
+    echo "  ⚠️  Sidecar istio-proxy NÃO encontrado"
+  fi
+else
+  echo "  ⚠️  Nenhum pod encontrado"
+fi
+
+echo ""
+echo "Cluster $MASTER_ENGINE_CLUSTER:"
+MASTER_POD=$(kubectl get pods -n mcs-demo --context=$MASTER_ENGINE_CTX -l app=hello-master-engine -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+if [ -n "$MASTER_POD" ]; then
+  CONTAINERS=$(kubectl get pod $MASTER_POD -n mcs-demo --context=$MASTER_ENGINE_CTX -o jsonpath='{.spec.containers[*].name}' 2>/dev/null)
+  READY=$(kubectl get pod $MASTER_POD -n mcs-demo --context=$MASTER_ENGINE_CTX -o jsonpath='{.status.containerStatuses[*].ready}' 2>/dev/null)
+  echo "  Pod: $MASTER_POD"
+  echo "  Containers: $CONTAINERS"
+  echo "  Ready: $READY"
+  if echo "$CONTAINERS" | grep -q "istio-proxy"; then
+    echo "  ✅ Sidecar istio-proxy presente"
+  else
+    echo "  ⚠️  Sidecar istio-proxy NÃO encontrado"
+  fi
+else
+  echo "  ⚠️  Nenhum pod encontrado"
+fi
 
 echo ""
 echo "🧪 Teste 1: De $APP_ENGINE_CLUSTER para $MASTER_ENGINE_CLUSTER"
 echo ""
-
-# Pegar o primeiro pod do cluster app-engine
-APP_POD=$(kubectl get pods -n mcs-demo --context=$APP_ENGINE_CTX -l app=hello-app-engine -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
 
 if [ -z "$APP_POD" ]; then
   echo "❌ Nenhum pod hello-app-engine encontrado no cluster $APP_ENGINE_CLUSTER"
@@ -79,45 +134,31 @@ if [ -z "$APP_POD" ]; then
 fi
 
 echo "📦 Usando pod: $APP_POD"
-echo "📦 Verificando containers no pod..."
-CONTAINERS=$(kubectl get pod $APP_POD -n mcs-demo --context=$APP_ENGINE_CTX -o jsonpath='{.spec.containers[*].name}' 2>/dev/null)
-echo "Containers: $CONTAINERS"
+echo "🌐 Testando comunicação para hello-master-engine.mcs-demo.svc.clusterset.local..."
+echo ""
 
-# Verificar se tem sidecar istio-proxy
-if echo "$CONTAINERS" | grep -q "istio-proxy"; then
-  echo "✅ Sidecar istio-proxy encontrado"
-  echo ""
-  echo "🌐 Testando comunicação usando sidecar istio-proxy..."
-  
-  # Usar curl do sidecar istio-proxy
-  RESULT=$(kubectl exec $APP_POD -n mcs-demo --context=$APP_ENGINE_CTX -c istio-proxy -- \
-    curl -s -w "\nHTTP_CODE:%{http_code}" --max-time 10 http://hello-master-engine.mcs-demo.svc.clusterset.local:80 2>&1 || echo "ERROR")
-  
-  if echo "$RESULT" | grep -q "HTTP_CODE:200\|Hello"; then
-    echo "✅ Comunicação bem-sucedida!"
-    echo "$RESULT" | head -5
-  else
-    echo "❌ Falha na comunicação"
-    echo "Resposta: $RESULT"
-    echo ""
-    echo "🔍 Diagnóstico adicional:"
-    echo "Testando DNS..."
-    kubectl exec $APP_POD -n mcs-demo --context=$APP_ENGINE_CTX -c istio-proxy -- \
-      nslookup hello-master-engine.mcs-demo.svc.clusterset.local 2>&1 || true
-  fi
+RESULT=$(kubectl exec $APP_POD -n mcs-demo --context=$APP_ENGINE_CTX -c hello-server -- \
+  curl -s -w "\nHTTP_CODE:%{http_code}" --max-time 10 http://hello-master-engine.mcs-demo.svc.clusterset.local:80 2>&1)
+
+HTTP_CODE=$(echo "$RESULT" | grep "HTTP_CODE" | cut -d: -f2)
+BODY=$(echo "$RESULT" | grep -v "HTTP_CODE")
+
+if [ "$HTTP_CODE" = "200" ] || echo "$BODY" | grep -q "Hello from master-engine"; then
+  echo "✅ Comunicação bem-sucedida!"
+  echo "HTTP Status: $HTTP_CODE"
+  echo "Resposta: $BODY"
 else
-  echo "⚠️  Sidecar istio-proxy não encontrado. Tentando usar container principal..."
-  # Tentar usar o container principal (pode não ter curl)
-  RESULT=$(kubectl exec $APP_POD -n mcs-demo --context=$APP_ENGINE_CTX -c hello-server -- \
-    wget -qO- --timeout=10 http://hello-master-engine.mcs-demo.svc.clusterset.local:80 2>&1 || echo "ERROR")
-  
-  if echo "$RESULT" | grep -q "Hello"; then
-    echo "✅ Comunicação bem-sucedida!"
-    echo "$RESULT" | head -5
-  else
-    echo "❌ Falha na comunicação ou ferramenta não disponível no container"
-    echo "Resposta: $RESULT"
-  fi
+  echo "❌ Falha na comunicação"
+  echo "Resposta completa: $RESULT"
+  echo ""
+  echo "🔍 Diagnóstico adicional:"
+  echo "Testando DNS..."
+  kubectl exec $APP_POD -n mcs-demo --context=$APP_ENGINE_CTX -c hello-server -- \
+    nslookup hello-master-engine.mcs-demo.svc.clusterset.local 2>&1 || true
+  echo ""
+  echo "Testando conectividade básica..."
+  kubectl exec $APP_POD -n mcs-demo --context=$APP_ENGINE_CTX -c hello-server -- \
+    ping -c 2 hello-master-engine.mcs-demo.svc.clusterset.local 2>&1 || true
 fi
 
 echo ""
@@ -125,58 +166,47 @@ echo ""
 echo "🧪 Teste 2: De $MASTER_ENGINE_CLUSTER para $APP_ENGINE_CLUSTER"
 echo ""
 
-# Pegar o primeiro pod do cluster master-engine
-MASTER_POD=$(kubectl get pods -n mcs-demo --context=$MASTER_ENGINE_CTX -l app=hello-master-engine -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
-
 if [ -z "$MASTER_POD" ]; then
   echo "❌ Nenhum pod hello-master-engine encontrado no cluster $MASTER_ENGINE_CLUSTER"
   exit 1
 fi
 
 echo "📦 Usando pod: $MASTER_POD"
-echo "📦 Verificando containers no pod..."
-CONTAINERS=$(kubectl get pod $MASTER_POD -n mcs-demo --context=$MASTER_ENGINE_CTX -o jsonpath='{.spec.containers[*].name}' 2>/dev/null)
-echo "Containers: $CONTAINERS"
+echo "🌐 Testando comunicação para hello-app-engine.mcs-demo.svc.clusterset.local..."
+echo ""
 
-# Verificar se tem sidecar istio-proxy
-if echo "$CONTAINERS" | grep -q "istio-proxy"; then
-  echo "✅ Sidecar istio-proxy encontrado"
-  echo ""
-  echo "🌐 Testando comunicação usando sidecar istio-proxy..."
-  
-  # Usar curl do sidecar istio-proxy
-  RESULT=$(kubectl exec $MASTER_POD -n mcs-demo --context=$MASTER_ENGINE_CTX -c istio-proxy -- \
-    curl -s -w "\nHTTP_CODE:%{http_code}" --max-time 10 http://hello-app-engine.mcs-demo.svc.clusterset.local:80 2>&1 || echo "ERROR")
-  
-  if echo "$RESULT" | grep -q "HTTP_CODE:200\|Hello"; then
-    echo "✅ Comunicação bem-sucedida!"
-    echo "$RESULT" | head -5
-  else
-    echo "❌ Falha na comunicação"
-    echo "Resposta: $RESULT"
-    echo ""
-    echo "🔍 Diagnóstico adicional:"
-    echo "Testando DNS..."
-    kubectl exec $MASTER_POD -n mcs-demo --context=$MASTER_ENGINE_CTX -c istio-proxy -- \
-      nslookup hello-app-engine.mcs-demo.svc.clusterset.local 2>&1 || true
-  fi
+RESULT=$(kubectl exec $MASTER_POD -n mcs-demo --context=$MASTER_ENGINE_CTX -c hello-server -- \
+  curl -s -w "\nHTTP_CODE:%{http_code}" --max-time 10 http://hello-app-engine.mcs-demo.svc.clusterset.local:80 2>&1)
+
+HTTP_CODE=$(echo "$RESULT" | grep "HTTP_CODE" | cut -d: -f2)
+BODY=$(echo "$RESULT" | grep -v "HTTP_CODE")
+
+if [ "$HTTP_CODE" = "200" ] || echo "$BODY" | grep -q "Hello from app-engine"; then
+  echo "✅ Comunicação bem-sucedida!"
+  echo "HTTP Status: $HTTP_CODE"
+  echo "Resposta: $BODY"
 else
-  echo "⚠️  Sidecar istio-proxy não encontrado. Tentando usar container principal..."
-  # Tentar usar o container principal (pode não ter curl)
-  RESULT=$(kubectl exec $MASTER_POD -n mcs-demo --context=$MASTER_ENGINE_CTX -c hello-server -- \
-    wget -qO- --timeout=10 http://hello-app-engine.mcs-demo.svc.clusterset.local:80 2>&1 || echo "ERROR")
-  
-  if echo "$RESULT" | grep -q "Hello"; then
-    echo "✅ Comunicação bem-sucedida!"
-    echo "$RESULT" | head -5
-  else
-    echo "❌ Falha na comunicação ou ferramenta não disponível no container"
-    echo "Resposta: $RESULT"
-  fi
+  echo "❌ Falha na comunicação"
+  echo "Resposta completa: $RESULT"
+  echo ""
+  echo "🔍 Diagnóstico adicional:"
+  echo "Testando DNS..."
+  kubectl exec $MASTER_POD -n mcs-demo --context=$MASTER_ENGINE_CTX -c hello-server -- \
+    nslookup hello-app-engine.mcs-demo.svc.clusterset.local 2>&1 || true
+  echo ""
+  echo "Testando conectividade básica..."
+  kubectl exec $MASTER_POD -n mcs-demo --context=$MASTER_ENGINE_CTX -c hello-server -- \
+    ping -c 2 hello-app-engine.mcs-demo.svc.clusterset.local 2>&1 || true
 fi
 
 echo ""
 echo "✅ Testes concluídos!"
+echo ""
+echo "💡 Resumo das verificações:"
+echo "   - ServiceExports: $(if [ -n "$(kubectl get serviceexport -n mcs-demo --context=$APP_ENGINE_CTX 2>/dev/null)" ]; then echo "✅ Presentes"; else echo "⚠️  Ausentes"; fi)"
+echo "   - ServiceImports: $(if [ -n "$SERVICEIMPORTS_APP" ] && [ -n "$SERVICEIMPORTS_MASTER" ]; then echo "✅ Presentes"; else echo "⚠️  Ausentes"; fi)"
+echo "   - Serviços MCS (gke-mcs-*): $(if [ -n "$MCS_SERVICES_APP" ] && [ -n "$MCS_SERVICES_MASTER" ]; then echo "✅ Presentes"; else echo "⚠️  Ausentes"; fi)"
+echo "   - Sidecar Istio: $(if echo "$CONTAINERS" | grep -q "istio-proxy"; then echo "✅ Presente"; else echo "⚠️  Ausente"; fi)"
 echo ""
 echo "💡 Para mais detalhes, verifique:"
 echo "   - kubectl describe serviceexport <nome> -n mcs-demo --context=<contexto>"
