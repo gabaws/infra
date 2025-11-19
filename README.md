@@ -56,8 +56,6 @@ Configure esses nameservers no seu provedor de domínio (GoDaddy, etc.).
 
 ### O que NÃO é Provisionado
 - **Multi-cluster Services (MCS)**: Deve ser habilitado manualmente (veja seção [MCS](#-multi-cluster-services-mcs))
-- **ArgoCD**: Deve ser instalado manualmente
-- **Istio Ingress Gateway**: Deve ser instalado manualmente junto com o ArgoCD
 
 
 ## 🔧 Variáveis Principais
@@ -256,4 +254,21 @@ Após habilitar o MCS, você pode:
 - O MCS funciona em conjunto com o **Anthos Service Mesh (ASM)** para comunicação segura entre clusters
 - Todos os clusters devem estar registrados no mesmo **GKE Hub Fleet**
 - Após habilitar o MCS, pode levar alguns minutos para a propagação completa
+
+## 🌐 Multi-cluster Ingress
+
+O **Multi-cluster Ingress** permite expor serviços de múltiplos clusters GKE através de um único ponto de entrada com balanceamento de carga global.
+
+**⚠️ Importante**: O Multi-cluster Ingress **não é suportado pelo Terraform** e deve ser habilitado manualmente via `gcloud` após o provisionamento da infraestrutura.
+
+### Documentação
+
+Para instruções detalhadas sobre como habilitar o Multi-cluster Ingress, consulte: **[docs/MULTICLUSTER_INGRESS.md](./docs/MULTICLUSTER_INGRESS.md)**
+
+### Notas Importantes
+
+- ⚠️ O Multi-cluster Ingress **não é suportado pelo Terraform** e deve ser habilitado manualmente
+- Requer um **config cluster** que gerencia a configuração do ingress
+- Todos os clusters devem estar registrados no mesmo **GKE Hub Fleet**
+- Após habilitar, pode levar alguns minutos para a propagação completa
 
