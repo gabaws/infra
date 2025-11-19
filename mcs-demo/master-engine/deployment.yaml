@@ -16,12 +16,21 @@ spec:
         app: hello-master-engine
       annotations:
         sidecar.istio.io/inject: "true"
+        sidecar.istio.io/proxyCPU: "100m"
+        sidecar.istio.io/proxyMemory: "128Mi"
     spec:
       containers:
       - name: hello-server
         image: nicolaka/netshoot:latest
         ports:
         - containerPort: 8080
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "64Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
         command: ["/bin/sh", "-c"]
         args:
         - |

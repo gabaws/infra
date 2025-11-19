@@ -131,6 +131,23 @@ if [ -z "$APP_POD" ]; then
   exit 1
 fi
 
+
+APP_POD_STATUS=$(kubectl get pod $APP_POD -n mcs-demo --context=$APP_ENGINE_CTX -o jsonpath='{.status.phase}' 2>/dev/null)
+APP_POD_READY=$(kubectl get pod $APP_POD -n mcs-demo --context=$APP_ENGINE_CTX -o jsonpath='{.status.containerStatuses[?(@.name=="hello-server")].ready}' 2>/dev/null)
+
+if [ "$APP_POD_STATUS" != "Running" ] || [ "$APP_POD_READY" != "true" ]; then
+  echo "❌ Pod $APP_POD não está pronto para execução"
+  echo "   Status: $APP_POD_STATUS"
+  echo "   Ready: $APP_POD_READY"
+  echo ""
+  echo "🔍 Verificando eventos do pod..."
+  kubectl describe pod $APP_POD -n mcs-demo --context=$APP_ENGINE_CTX 2>/dev/null | tail -20
+  echo ""
+  echo "💡 Execute o script de diagnóstico para mais detalhes:"
+  echo "   ./scripts/diagnose-pending-pods.sh"
+  exit 1
+fi
+
 echo "📦 Usando pod: $APP_POD"
 echo "🌐 Testando comunicação para hello-master-engine.mcs-demo.svc.clusterset.local..."
 echo ""
@@ -166,6 +183,22 @@ echo ""
 
 if [ -z "$MASTER_POD" ]; then
   echo "❌ Nenhum pod hello-master-engine encontrado no cluster $MASTER_ENGINE_CLUSTER"
+  exit 1
+fi
+
+MASTER_POD_STATUS=$(kubectl get pod $MASTER_POD -n mcs-demo --context=$MASTER_ENGINE_CTX -o jsonpath='{.status.phase}' 2>/dev/null)
+MASTER_POD_READY=$(kubectl get pod $MASTER_POD -n mcs-demo --context=$MASTER_ENGINE_CTX -o jsonpath='{.status.containerStatuses[?(@.name=="hello-server")].ready}' 2>/dev/null)
+
+if [ "$MASTER_POD_STATUS" != "Running" ] || [ "$MASTER_POD_READY" != "true" ]; then
+  echo "❌ Pod $MASTER_POD não está pronto para execução"
+  echo "   Status: $MASTER_POD_STATUS"
+  echo "   Ready: $MASTER_POD_READY"
+  echo ""
+  echo "🔍 Verificando eventos do pod..."
+  kubectl describe pod $MASTER_POD -n mcs-demo --context=$MASTER_ENGINE_CTX 2>/dev/null | tail -20
+  echo ""
+  echo "💡 Execute o script de diagnóstico para mais detalhes:"
+  echo "   ./scripts/diagnose-pending-pods.sh"
   exit 1
 fi
 

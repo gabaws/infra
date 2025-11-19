@@ -1,0 +1,21 @@
+# VirtualService para rotear tráfego para o serviço remoto via ServiceEntry
+# Este é um exemplo de como fazer comunicação multi-cluster SEM MCS
+
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: hello-master-engine-remote
+  namespace: mcs-demo
+spec:
+  hosts:
+  - hello-master-engine-remote.mcs-demo.svc.cluster.local
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: hello-master-engine-remote.mcs-demo.svc.cluster.local
+        port:
+          number: 80
+      weight: 100

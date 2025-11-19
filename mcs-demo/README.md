@@ -7,15 +7,19 @@ Demonstração de comunicação entre serviços em diferentes clusters GKE usand
 ```
 mcs-demo/
 ├── README.md
-├── deploy.sh                    # Script de deploy automatizado
-├── test-communication.sh        # Script de teste de comunicação
-├── app-engine/                  # Aplicação no cluster app-engine
+├── scripts/
+│   ├── deploy.sh                    # Script de deploy automatizado
+│   ├── test-communication.sh        # Script de teste de comunicação
+│   ├── diagnose-pending-pods.sh    # Script de diagnóstico de pods pendentes
+│   ├── check-metrics.sh            # Script para verificar métricas
+│   └── check-telemetry.sh          # Script para verificar telemetria
+├── app-engine/                      # Aplicação no cluster app-engine
 │   ├── namespace.yaml
 │   ├── deployment.yaml
 │   ├── service.yaml
 │   ├── service-export.yaml
 │   └── kustomization.yaml
-└── master-engine/               # Aplicação no cluster master-engine
+└── master-engine/                   # Aplicação no cluster master-engine
     ├── namespace.yaml
     ├── deployment.yaml
     ├── service.yaml
@@ -35,7 +39,7 @@ mcs-demo/
 ### Deploy Automatizado
 
 ```bash
-./deploy.sh
+./scripts/deploy.sh
 ```
 
 O script irá:
@@ -58,11 +62,33 @@ kubectl apply -k . --context=gke_infra-474223_us-central1-a_master-engine
 
 ## 🧪 Testes
 
-### Teste Automatizado
+### Teste com MCS (Recomendado)
+
+Teste de comunicação usando Multi-cluster Services (MCS):
 
 ```bash
-./test-communication.sh
+./scripts/test-communication.sh
 ```
+
+O script verifica automaticamente se os pods estão prontos antes de executar os testes de comunicação.
+
+### Teste sem MCS (ASM-only)
+
+Teste de comunicação usando apenas ASM Multi-cluster (ServiceEntry + VirtualService), **sem MCS**:
+
+```bash
+# 1. Configurar ServiceEntry e VirtualService
+./scripts/setup-asm-multicluster-only.sh
+
+# 2. Testar comunicação
+./scripts/test-asm-multicluster-only.sh
+```
+
+**Diferenças:**
+- **Com MCS**: Usa `service.namespace.svc.clusterset.local` (automático)
+- **Sem MCS**: Usa `service-remote.namespace.svc.cluster.local` (manual)
+
+Veja [docs/TESTE_ASM_SEM_MCS.md](./docs/TESTE_ASM_SEM_MCS.md) para mais detalhes.
 
 ### Teste Manual
 
@@ -119,6 +145,67 @@ Exemplos:
 
 Consulte [docs/TROUBLESHOOTING_MCS.md](./docs/TROUBLESHOOTING_MCS.md) para problemas comuns e soluções.
 
+### Diagnóstico de Pods Pendentes
+
+Se os pods estiverem em estado `Pending`, execute o script de diagnóstico:
+
+```bash
+./scripts/diagnose-pending-pods.sh
+```
+
+Este script verifica:
+- Nós disponíveis no cluster
+- Status e eventos dos pods pendentes
+- Recursos disponíveis (CPU/memória)
+- Taints e tolerations
+- Node selectors
+- Requests/limits dos pods
+
+### Resolvendo Problemas de CPU Insuficiente
+
+Se o diagnóstico mostrar "Insufficient cpu" e "max node group size reached", você tem duas opções:
+
+#### Opção 1: Aumentar o max_node_count (Recomendado)
+
+Execute o script para aumentar o limite de nós:
+
+```bash
+./scripts/fix-node-pool-scaling.sh
+```
+
+Este script aumenta o `max_node_count` de 2 para 4 em ambos os clusters, permitindo que o cluster-autoscaler adicione mais nós quando necessário.
+
+#### Opção 2: Atualizar via Terraform
+
+Edite o arquivo `terraform.tfvars` e aumente o `max_node_count`:
+
+```hcl
+gke_clusters = {
+  master-engine = {
+    # ... outras configurações ...
+    max_node_count = 4  # Aumentar de 2 para 4
+  }
+  app-engine = {
+    # ... outras configurações ...
+    max_node_count = 4  # Aumentar de 2 para 4
+  }
+}
+```
+
+Depois execute:
+
+```bash
+terraform apply
+```
+
+#### Opção 3: Reduzir Recursos dos Pods
+
+Os deployments já foram configurados com recursos reduzidos:
+- Container principal: 50m CPU / 64Mi memória (requests)
+- Sidecar Istio: 100m CPU / 128Mi memória (via annotations)
+
+Se ainda houver problemas, você pode reduzir ainda mais os recursos nos arquivos `deployment.yaml`.
+
 ### Verificações Rápidas
 
 ```bash
@@ -131,6 +218,12 @@ kubectl get serviceimport -n mcs-demo --context=<contexto>
 # Verificar sidecar injection
 kubectl get pod <pod-name> -n mcs-demo --context=<contexto> -o jsonpath='{.spec.containers[*].name}'
 # Deve mostrar: hello-server istio-proxy
+
+# Verificar eventos de um pod pendente
+kubectl describe pod <pod-name> -n mcs-demo --context=<contexto>
+
+# Verificar todos os eventos do namespace
+kubectl get events -n mcs-demo --context=<contexto> --sort-by='.lastTimestamp'
 ```
 
 ## 📚 Referências

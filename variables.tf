@@ -111,7 +111,7 @@ variable "gke_clusters" {
       zone                       = "us-central1-a"
       initial_node_count         = 1
       min_node_count             = 1
-      max_node_count             = 2
+      max_node_count             = 6
       machine_type               = "e2-medium"
       disk_size_gb               = 50
       enable_private_nodes       = true
@@ -123,7 +123,7 @@ variable "gke_clusters" {
       zone                       = "us-east1-b"
       initial_node_count         = 1
       min_node_count             = 1
-      max_node_count             = 2
+      max_node_count             = 6
       machine_type               = "e2-medium"
       disk_size_gb               = 50
       enable_private_nodes       = true
