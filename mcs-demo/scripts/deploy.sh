@@ -52,13 +52,13 @@ echo ""
 
 # Deploy no app-engine
 echo "📦 Deployando aplicação no cluster $APP_ENGINE_CLUSTER..."
-cd app-engine
+cd ../app-engine
 kubectl apply -k . --context=$APP_ENGINE_CTX
 cd ..
 
 echo ""
 echo "📦 Deployando aplicação no cluster $MASTER_ENGINE_CLUSTER..."
-cd master-engine
+cd ../master-engine
 kubectl apply -k . --context=$MASTER_ENGINE_CTX
 cd ..
 
