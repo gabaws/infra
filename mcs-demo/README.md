@@ -1,19 +1,21 @@
 # Demo Multi-cluster Services (MCS)
 
-Este diretório contém os manifestos para testar a comunicação entre serviços em diferentes clusters usando Multi-cluster Services, seguindo a [documentação oficial do Google](https://cloud.google.com/kubernetes-engine/docs/how-to/multi-cluster-services?hl=pt-br).
+Demonstração de comunicação entre serviços em diferentes clusters GKE usando Multi-cluster Services.
 
 ## 📋 Estrutura
 
 ```
 mcs-demo/
-├── README.md                    # Este arquivo
+├── README.md
+├── deploy.sh                    # Script de deploy automatizado
+├── test-communication.sh        # Script de teste de comunicação
 ├── app-engine/                  # Aplicação no cluster app-engine
 │   ├── namespace.yaml
 │   ├── deployment.yaml
 │   ├── service.yaml
 │   ├── service-export.yaml
 │   └── kustomization.yaml
-└── master-engine/              # Aplicação no cluster master-engine
+└── master-engine/               # Aplicação no cluster master-engine
     ├── namespace.yaml
     ├── deployment.yaml
     ├── service.yaml
@@ -21,139 +23,89 @@ mcs-demo/
     └── kustomization.yaml
 ```
 
-## 🎯 Aplicações
-
-### Cluster app-engine
-- **Aplicação**: `hello-app-engine`
-- **Imagem**: `gcr.io/google-samples/hello-app:1.0`
-- **Porta**: 8080 (exposta como 80 no Service)
-- **Replicas**: 2
-
-### Cluster master-engine
-- **Aplicação**: `hello-master-engine`
-- **Imagem**: `gcr.io/google-samples/hello-app:1.0`
-- **Porta**: 8080 (exposta como 80 no Service)
-- **Replicas**: 2
-
 ## 🚀 Deploy
 
 ### Pré-requisitos
 
-1. ✅ Multi-cluster Services habilitado no Fleet
-2. ✅ Clusters registrados no Fleet
-3. ✅ `kubectl` configurado com acesso aos clusters
+1. Multi-cluster Services habilitado no Fleet
+2. Clusters registrados no Fleet
+3. ASM (Anthos Service Mesh) habilitado
+4. `kubectl` e `gcloud` configurados
 
-### Passo 1: Conectar aos clusters
+### Deploy Automatizado
 
 ```bash
-# Conectar ao cluster app-engine
-gcloud container clusters get-credentials app-engine \
-  --location=us-east1-b \
-  --project=infra-474223
-
-# Conectar ao cluster master-engine
-gcloud container clusters get-credentials master-engine \
-  --location=us-central1-a \
-  --project=infra-474223
+./deploy.sh
 ```
 
-### Passo 2: Deploy no cluster app-engine
+O script irá:
+- Conectar aos clusters
+- Fazer deploy das aplicações
+- Verificar status dos pods e ServiceExports
+- Executar testes de comunicação
+
+### Deploy Manual
 
 ```bash
+# Cluster app-engine
 cd app-engine
-kubectl apply -k .
+kubectl apply -k . --context=gke_infra-474223_us-east1-b_app-engine
+
+# Cluster master-engine
+cd ../master-engine
+kubectl apply -k . --context=gke_infra-474223_us-central1-a_master-engine
 ```
 
-### Passo 3: Deploy no cluster master-engine
+## 🧪 Testes
+
+### Teste Automatizado
 
 ```bash
-cd ../master-engine
-kubectl apply -k .
+./test-communication.sh
+```
+
+### Teste Manual
+
+```bash
+# De app-engine para master-engine
+kubectl run test-pod --image=curlimages/curl:latest --rm -it --restart=Never -n mcs-demo \
+  --context=gke_infra-474223_us-east1-b_app-engine \
+  --overrides='{"metadata":{"annotations":{"sidecar.istio.io/inject":"true"}}}' \
+  -- curl http://hello-master-engine.mcs-demo.svc.clusterset.local
+
+# De master-engine para app-engine
+kubectl run test-pod --image=curlimages/curl:latest --rm -it --restart=Never -n mcs-demo \
+  --context=gke_infra-474223_us-central1-a_master-engine \
+  --overrides='{"metadata":{"annotations":{"sidecar.istio.io/inject":"true"}}}' \
+  -- curl http://hello-app-engine.mcs-demo.svc.clusterset.local
 ```
 
 ## ✅ Verificação
 
-### Verificar pods
+### Verificar Pods (deve mostrar 2/2: app + istio-proxy)
 
 ```bash
-# No cluster app-engine
 kubectl get pods -n mcs-demo --context=gke_infra-474223_us-east1-b_app-engine
-
-# No cluster master-engine
 kubectl get pods -n mcs-demo --context=gke_infra-474223_us-central1-a_master-engine
-```
-
-### Verificar serviços
-
-```bash
-# No cluster app-engine
-kubectl get svc -n mcs-demo --context=gke_infra-474223_us-east1-b_app-engine
-
-# No cluster master-engine
-kubectl get svc -n mcs-demo --context=gke_infra-474223_us-central1-a_master-engine
 ```
 
 ### Verificar ServiceExports
 
 ```bash
-# No cluster app-engine
 kubectl get serviceexport -n mcs-demo --context=gke_infra-474223_us-east1-b_app-engine
-
-# No cluster master-engine
 kubectl get serviceexport -n mcs-demo --context=gke_infra-474223_us-central1-a_master-engine
 ```
 
-## 🔧 Sidecar Istio
-
-Os pods têm injeção automática do sidecar do Istio habilitada via:
-- **Labels no namespace**: `istio-injection: enabled` e `istio.io/rev: asm-managed`
-- **Anotações nos pods**: `sidecar.istio.io/inject: "true"`
-
-Verifique se o sidecar foi injetado:
-```bash
-kubectl get pods -n mcs-demo
-# Deve mostrar 2/2 containers (app + istio-proxy)
-```
-
-Veja mais detalhes em [docs/ISTIO_SIDECAR_INJECTION.md](./docs/ISTIO_SIDECAR_INJECTION.md)
-
-## 🧪 Testes de Comunicação
-
-### Teste 1: De app-engine para master-engine
+### Verificar Serviços Importados (gke-mcs-*)
 
 ```bash
-# Criar pod de teste no cluster app-engine
-kubectl run test-pod --image=curlimages/curl:latest --rm -it --restart=Never -n mcs-demo \
-  --context=gke_infra-474223_us-east1-b_app-engine \
-  -- sh
-
-# Dentro do pod, testar comunicação:
-curl http://hello-master-engine.mcs-demo.svc.clusterset.local
-```
-
-### Teste 2: De master-engine para app-engine
-
-```bash
-# Criar pod de teste no cluster master-engine
-kubectl run test-pod --image=curlimages/curl:latest --rm -it --restart=Never -n mcs-demo \
-  --context=gke_infra-474223_us-central1-a_master-engine \
-  -- sh
-
-# Dentro do pod, testar comunicação:
-curl http://hello-app-engine.mcs-demo.svc.clusterset.local
-```
-
-### Teste 3: DNS lookup
-
-```bash
-# No pod de teste, verificar resolução DNS:
-nslookup hello-master-engine.mcs-demo.svc.clusterset.local
-nslookup hello-app-engine.mcs-demo.svc.clusterset.local
+kubectl get svc -n mcs-demo --context=gke_infra-474223_us-east1-b_app-engine | grep gke-mcs
+kubectl get svc -n mcs-demo --context=gke_infra-474223_us-central1-a_master-engine | grep gke-mcs
 ```
 
 ## 📝 Formato DNS Multi-cluster
 
-Os serviços expostos via ServiceExport podem ser acessados usando o formato:
+Os serviços expostos via ServiceExport podem ser acessados usando:
 
 ```
 <service-name>.<namespace>.svc.clusterset.local
@@ -165,33 +117,23 @@ Exemplos:
 
 ## 🔍 Troubleshooting
 
-### Verificar status do ServiceExport
+Consulte [docs/TROUBLESHOOTING_MCS.md](./docs/TROUBLESHOOTING_MCS.md) para problemas comuns e soluções.
+
+### Verificações Rápidas
 
 ```bash
-kubectl describe serviceexport hello-app-engine -n mcs-demo
-kubectl describe serviceexport hello-master-engine -n mcs-demo
-```
+# Verificar status do ServiceExport
+kubectl describe serviceexport hello-app-engine -n mcs-demo --context=<contexto>
 
-### Verificar logs dos pods
+# Verificar ServiceImports (criados automaticamente)
+kubectl get serviceimport -n mcs-demo --context=<contexto>
 
-```bash
-# Cluster app-engine
-kubectl logs -l app=hello-app-engine -n mcs-demo --context=gke_infra-474223_us-east1-b_app-engine
-
-# Cluster master-engine
-kubectl logs -l app=hello-master-engine -n mcs-demo --context=gke_infra-474223_us-central1-a_master-engine
-```
-
-### Verificar conectividade de rede
-
-```bash
-# Testar conectividade básica
-kubectl run nettest --image=nicolaka/netshoot:latest --rm -it --restart=Never -n mcs-demo \
-  --context=gke_infra-474223_us-east1-b_app-engine \
-  -- curl -v http://hello-master-engine.mcs-demo.svc.clusterset.local
+# Verificar sidecar injection
+kubectl get pod <pod-name> -n mcs-demo --context=<contexto> -o jsonpath='{.spec.containers[*].name}'
+# Deve mostrar: hello-server istio-proxy
 ```
 
 ## 📚 Referências
 
-- [Multi-cluster Services Documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/multi-cluster-services?hl=pt-br)
-- [ServiceExport Resource](https://cloud.google.com/kubernetes-engine/docs/how-to/multi-cluster-services#registering_a_service_for_export)
+- [Multi-cluster Services Documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/multi-cluster-services)
+- [Anthos Service Mesh Multi-cluster](https://cloud.google.com/service-mesh/docs/multicluster-setup)
