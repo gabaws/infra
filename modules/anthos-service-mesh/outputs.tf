@@ -28,3 +28,12 @@ output "membership_ids" {
   }
 }
 
+output "mcs_status" {
+  description = "Status of Multi-cluster Services (MCS) feature"
+  value = {
+    feature_state = try(google_gke_hub_feature.multiclusterservicediscovery.state, null)
+    enabled       = try(google_gke_hub_feature.multiclusterservicediscovery.state != null, false)
+  }
+  sensitive = true
+}
+

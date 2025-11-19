@@ -102,3 +102,57 @@ terraform destroy
 
 Ou via GitHub Actions: `workflow_dispatch` com `operation: destroy`
 
+## ⚠️ Troubleshooting
+
+### Erro: "Already exists" ao recriar clusters GKE
+
+**Problema**: Após destruir os clusters GKE, ao tentar recriá-los imediatamente, você pode receber o erro:
+```
+Error: googleapi: Error 409: Already exists: projects/.../clusters/...
+```
+
+**Causa**: O GCP precisa de tempo (geralmente 5-15 minutos) para limpar completamente os recursos do cluster após a exclusão. Durante esse período, o cluster ainda existe no sistema do GCP, mesmo que apareça como "deletado" no console.
+
+**Soluções**:
+
+1. **Aguardar a limpeza completa** (Recomendado):
+   ```bash
+   # Verificar se os clusters foram completamente removidos
+   gcloud container clusters list --project=infra-474223
+   
+   # Aguardar até que a lista esteja vazia (pode levar 5-15 minutos)
+   # Depois, executar novamente:
+   terraform apply
+   ```
+
+2. **Verificar o estado do Terraform**:
+   ```bash
+   # Verificar se há recursos órfãos no estado
+   terraform state list
+   
+   # Se necessário, remover manualmente do estado
+   terraform state rm module.gke_clusters[0].google_container_cluster.clusters["master-engine"]
+   terraform state rm module.gke_clusters[0].google_container_cluster.clusters["app-engine"]
+   ```
+
+3. **Forçar remoção manual** (se o cluster estiver travado):
+   ```bash
+   # Remover o cluster manualmente via gcloud
+   gcloud container clusters delete master-engine --zone=us-central1-a --project=infra-474223 --quiet
+   gcloud container clusters delete app-engine --zone=us-east1-b --project=infra-474223 --quiet
+   
+   # Aguardar a remoção completa e então executar:
+   terraform apply
+   ```
+
+4. **Usar nomes diferentes temporariamente**:
+   Se precisar recriar imediatamente, altere temporariamente os nomes dos clusters em `terraform.tfvars`:
+   ```hcl
+   gke_clusters = {
+     master-engine-v2 = { ... }
+     app-engine-v2 = { ... }
+   }
+   ```
+
+**Prevenção**: Os timeouts foram configurados no módulo GKE para garantir que a destruição seja completa. Se o problema persistir, aguarde pelo menos 10 minutos após a destruição antes de tentar recriar.
+

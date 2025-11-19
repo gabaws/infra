@@ -2,11 +2,11 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = ">= 5.41"
+      version = ">= 6.0"
     }
     google-beta = {
       source  = "hashicorp/google-beta"
-      version = ">= 5.41"
+      version = ">= 6.0"
     }
   }
 }
@@ -75,6 +75,40 @@ resource "google_gke_hub_feature_membership" "mesh_feature_membership" {
 
   depends_on = [
     google_gke_hub_feature.mesh,
+    google_gke_hub_membership.memberships
+  ]
+}
+
+# Multi-cluster Services (MCS) Feature
+# Habilita o Multi-cluster Services para permitir ServiceExport/ServiceImport entre clusters
+resource "google_gke_hub_feature" "multiclusterservicediscovery" {
+  name     = "multiclusterservicediscovery"
+  location = "global"
+  project  = var.project_id
+
+  depends_on = [
+    google_project_service.gkehub_api,
+    google_gke_hub_membership.memberships
+  ]
+}
+
+# Feature Membership para MCS em cada cluster
+# O config_membership deve ser o mesmo para todos os clusters (usando o primeiro como referência)
+resource "google_gke_hub_feature_membership" "mcs_feature_membership" {
+  for_each = var.clusters
+
+  location   = "global"
+  feature    = google_gke_hub_feature.multiclusterservicediscovery.name
+  membership = google_gke_hub_membership.memberships[each.key].membership_id
+  project    = var.project_id
+
+  multiclusterservicediscovery {
+    # Usa o primeiro cluster como config_membership (cluster de configuração)
+    config_membership = google_gke_hub_membership.memberships[keys(var.clusters)[0]].membership_id
+  }
+
+  depends_on = [
+    google_gke_hub_feature.multiclusterservicediscovery,
     google_gke_hub_membership.memberships
   ]
 }

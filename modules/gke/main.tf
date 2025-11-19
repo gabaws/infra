@@ -2,11 +2,11 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = ">= 5.41"
+      version = ">= 6.0"
     }
     google-beta = {
       source  = "hashicorp/google-beta"
-      version = ">= 5.41"
+      version = ">= 6.0"
     }
   }
 }
@@ -133,6 +133,22 @@ resource "google_container_cluster" "clusters" {
   resource_labels = {
     environment = "production"
     managed-by  = "terraform"
+  }
+
+  # Timeouts para garantir que a destruição seja completa antes de recriar
+  timeouts {
+    create = "45m"
+    update = "45m"
+    delete = "30m"
+  }
+
+  # Lifecycle para garantir que a destruição seja completa
+  lifecycle {
+    create_before_destroy = false
+    ignore_changes = [
+      # Ignora mudanças em labels que podem ser feitas externamente
+      resource_labels["updated-by"],
+    ]
   }
 }
 
