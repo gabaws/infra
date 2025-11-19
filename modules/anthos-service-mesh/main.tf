@@ -81,6 +81,8 @@ resource "google_gke_hub_feature_membership" "mesh_feature_membership" {
 
 # Multi-cluster Services (MCS) Feature
 # Habilita o Multi-cluster Services para permitir ServiceExport/ServiceImport entre clusters
+# NOTA: O Terraform não suporta completamente a configuração do MCS via feature_membership.
+# A feature é habilitada aqui, mas a configuração do config_membership deve ser feita manualmente via gcloud.
 resource "google_gke_hub_feature" "multiclusterservicediscovery" {
   name     = "multiclusterservicediscovery"
   location = "global"
@@ -92,26 +94,30 @@ resource "google_gke_hub_feature" "multiclusterservicediscovery" {
   ]
 }
 
-# Feature Membership para MCS em cada cluster
-# O config_membership deve ser o mesmo para todos os clusters (usando o primeiro como referência)
-resource "google_gke_hub_feature_membership" "mcs_feature_membership" {
-  for_each = var.clusters
-
-  location   = "global"
-  feature    = google_gke_hub_feature.multiclusterservicediscovery.name
-  membership = google_gke_hub_membership.memberships[each.key].membership_id
-  project    = var.project_id
-
-  multiclusterservicediscovery {
-    # Usa o primeiro cluster como config_membership (cluster de configuração)
-    config_membership = google_gke_hub_membership.memberships[keys(var.clusters)[0]].membership_id
-  }
-
-  depends_on = [
-    google_gke_hub_feature.multiclusterservicediscovery,
-    google_gke_hub_membership.memberships
-  ]
-}
+# NOTA: A configuração completa do MCS requer um config_membership que não pode ser
+# configurado via Terraform atualmente. Após aplicar este Terraform, execute:
+#
+# 1. Obter o membership ID do primeiro cluster (config cluster):
+#    terraform output -json | jq -r '.anthos_service_mesh_status.value.membership_ids | to_entries[0].value'
+#
+# 2. Habilitar MCS com o config_membership:
+#    gcloud container fleet multi-cluster-services enable \
+#      --project=PROJECT_ID
+#
+# 3. Configurar o config_membership (usando o primeiro cluster):
+#    CONFIG_MEMBERSHIP=$(terraform output -json | jq -r '.anthos_service_mesh_status.value.membership_ids | to_entries[0].value')
+#    gcloud container fleet multi-cluster-services update \
+#      --config-membership=projects/PROJECT_ID/locations/global/memberships/$CONFIG_MEMBERSHIP \
+#      --project=PROJECT_ID
+#
+# 4. Registrar os clusters no MCS:
+#    MEMBERSHIPS=$(terraform output -json | jq -r '.anthos_service_mesh_status.value.membership_ids | to_entries | map(.value) | join(",")')
+#    gcloud container fleet multi-cluster-services update \
+#      --config-membership=projects/PROJECT_ID/locations/global/memberships/$CONFIG_MEMBERSHIP \
+#      --memberships=$MEMBERSHIPS \
+#      --project=PROJECT_ID
+#
+# Veja: https://cloud.google.com/kubernetes-engine/docs/how-to/multi-cluster-services
 
 # Multi-cluster Ingress Feature
 # NOTE: The multiclusteringress feature requires a config_membership which cannot be

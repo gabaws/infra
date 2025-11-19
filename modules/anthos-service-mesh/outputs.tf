@@ -33,7 +33,32 @@ output "mcs_status" {
   value = {
     feature_state = try(google_gke_hub_feature.multiclusterservicediscovery.state, null)
     enabled       = try(google_gke_hub_feature.multiclusterservicediscovery.state != null, false)
+    note          = "MCS feature is enabled, but config_membership must be configured manually via gcloud"
   }
-  sensitive = true
+  sensitive = false
+}
+
+output "mcs_setup_command" {
+  description = "Comando para configurar o MCS após o Terraform"
+  value = <<-EOT
+    # 1. Obter o membership ID do primeiro cluster (config cluster)
+    CONFIG_MEMBERSHIP=$(terraform output -json | jq -r '.anthos_service_mesh_status.value.membership_ids | to_entries[0].value')
+    
+    # 2. Habilitar MCS
+    gcloud container fleet multi-cluster-services enable --project=${var.project_id}
+    
+    # 3. Configurar config_membership
+    gcloud container fleet multi-cluster-services update \\
+      --config-membership=projects/${var.project_id}/locations/global/memberships/\$CONFIG_MEMBERSHIP \\
+      --project=${var.project_id}
+    
+    # 4. Registrar todos os clusters
+    MEMBERSHIPS=$(terraform output -json | jq -r '.anthos_service_mesh_status.value.membership_ids | to_entries | map(.value) | join(",")')
+    gcloud container fleet multi-cluster-services update \\
+      --config-membership=projects/${var.project_id}/locations/global/memberships/\$CONFIG_MEMBERSHIP \\
+      --memberships=\$MEMBERSHIPS \\
+      --project=${var.project_id}
+  EOT
+  sensitive = false
 }
 
