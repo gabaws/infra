@@ -50,17 +50,19 @@ echo ""
 echo "✅ Clusters conectados!"
 echo ""
 
+# Obter diretório base do projeto (mcs-demo)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 # Deploy no app-engine
 echo "📦 Deployando aplicação no cluster $APP_ENGINE_CLUSTER..."
-cd ../app-engine
+cd "$BASE_DIR/app-engine"
 kubectl apply -k . --context=$APP_ENGINE_CTX
-cd ..
 
 echo ""
 echo "📦 Deployando aplicação no cluster $MASTER_ENGINE_CLUSTER..."
-cd ../master-engine
+cd "$BASE_DIR/master-engine"
 kubectl apply -k . --context=$MASTER_ENGINE_CTX
-cd ..
 
 echo ""
 echo "⏳ Aguardando pods ficarem prontos..."
@@ -92,5 +94,5 @@ echo ""
 echo "⏳ Aguarde alguns minutos para a propagação dos serviços entre clusters."
 echo ""
 echo "🧪 Para testar a comunicação entre clusters, execute:"
-echo "   ./test-communication.sh"
+echo "   ./scripts/test-communication.sh"
 echo ""
