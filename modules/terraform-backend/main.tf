@@ -7,7 +7,6 @@ terraform {
   }
 }
 
-# Bucket para armazenar o estado do Terraform
 resource "google_storage_bucket" "terraform_state" {
   name          = var.bucket_name
   location      = var.bucket_location
@@ -29,7 +28,6 @@ resource "google_storage_bucket" "terraform_state" {
     }
   }
 
-  # Encryption
   encryption {
     default_kms_key_name = var.kms_key_name
   }
@@ -37,7 +35,6 @@ resource "google_storage_bucket" "terraform_state" {
   labels = var.labels
 }
 
-# IAM binding para permitir acesso ao bucket
 resource "google_storage_bucket_iam_member" "terraform_state_admin" {
   for_each = toset(var.admins)
 
@@ -46,7 +43,6 @@ resource "google_storage_bucket_iam_member" "terraform_state_admin" {
   member = each.value
 }
 
-# IAM binding para leitura (para CI/CD)
 resource "google_storage_bucket_iam_member" "terraform_state_reader" {
   for_each = toset(var.readers)
 
