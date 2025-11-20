@@ -1,20 +1,20 @@
 output "network_name" {
-  description = "The name of the VPC network"
+  description = "Nome da VPC"
   value       = local.network_name
 }
 
 output "network_id" {
-  description = "The ID of the VPC network"
+  description = "ID da VPC"
   value       = local.network_id
 }
 
 output "network_self_link" {
-  description = "The self link of the VPC network"
+  description = "O link próprio da rede VPC"
   value       = local.network_self_link
 }
 
 output "subnets" {
-  description = "The created subnets"
+  description = "Subnets criadas"
   value = {
     for k, v in google_compute_subnetwork.subnets : k => {
       name                = v.name
@@ -28,7 +28,7 @@ output "subnets" {
 }
 
 output "subnet_names" {
-  description = "List of subnet names"
+  description = "Lista e Nome das Subnets"
   value       = [for subnet in google_compute_subnetwork.subnets : subnet.name]
 }
 
