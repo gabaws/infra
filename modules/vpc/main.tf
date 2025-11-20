@@ -7,7 +7,6 @@ terraform {
   }
 }
 
-# VPC Network
 resource "google_compute_network" "vpc" {
   count                   = var.manage_network ? 1 : 0
   name                    = var.network_name
@@ -40,7 +39,6 @@ locals {
   )
 }
 
-# Subnets
 resource "google_compute_subnetwork" "subnets" {
   for_each = {
     for subnet in var.subnets : subnet.name => subnet
@@ -54,7 +52,6 @@ resource "google_compute_subnetwork" "subnets" {
 
   description = try(each.value.description, "Subnet ${each.value.name}")
 
-  # Secondary ranges for GKE
   dynamic "secondary_ip_range" {
     for_each = try(var.secondary_ranges[each.value.name], [])
     content {
@@ -63,11 +60,9 @@ resource "google_compute_subnetwork" "subnets" {
     }
   }
 
-  # Private Google Access
   private_ip_google_access = var.enable_private_google_access
 }
 
-# Router for Cloud NAT
 resource "google_compute_router" "router" {
   for_each = {
     for subnet in var.subnets : subnet.region => subnet
@@ -80,7 +75,6 @@ resource "google_compute_router" "router" {
   project = var.project_id
 }
 
-# Cloud NAT for private GKE nodes
 resource "google_compute_router_nat" "nat" {
   for_each = {
     for subnet in var.subnets : subnet.region => subnet
@@ -101,7 +95,6 @@ resource "google_compute_router_nat" "nat" {
   project = var.project_id
 }
 
-# Firewall rule for internal communication
 resource "google_compute_firewall" "allow_internal" {
   name    = "${var.network_name}-allow-internal"
   network = local.network_name
@@ -128,7 +121,6 @@ resource "google_compute_firewall" "allow_internal" {
   priority = 65534
 }
 
-# Firewall rule for SSH (optional, for debugging)
 resource "google_compute_firewall" "allow_ssh" {
   count   = var.enable_ssh ? 1 : 0
   name    = "${var.network_name}-allow-ssh"
