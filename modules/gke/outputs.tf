@@ -1,5 +1,5 @@
 output "cluster_info" {
-  description = "Information about the created GKE clusters"
+  description = "Informações sobre os clusters GKE"
   value = {
     for k, v in google_container_cluster.clusters : k => {
       name                   = v.name
@@ -15,12 +15,12 @@ output "cluster_info" {
 }
 
 output "cluster_names" {
-  description = "Names of the created clusters"
+  description = "Nome dos clusters criados"
   value       = [for k, v in google_container_cluster.clusters : v.name]
 }
 
 output "cluster_endpoints" {
-  description = "Endpoints of the created clusters"
+  description = "Endpoints dos clusters criados"
   value = {
     for k, v in google_container_cluster.clusters : k => v.endpoint
   }
@@ -28,7 +28,7 @@ output "cluster_endpoints" {
 }
 
 output "cluster_registration_info" {
-  description = "Non-sensitive information needed for cluster registrations"
+  description = "Informações não sensíveis necessárias para o registro de clusters."
   value = {
     for k, v in google_container_cluster.clusters : k => {
       name     = v.name
