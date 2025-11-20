@@ -1,0 +1,20 @@
+name: Terraform Setup and Auth
+description: Authenticate to GCP + Setup Terraform + Init
+
+runs:
+  using: "composite"
+  steps:
+    - name: Authenticate to Google Cloud via OIDC
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: "${{ env.WIF_PROVIDER }}"
+        service_account: "${{ env.SA_EMAIL }}"
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "${{ env.TERRAFORM_VERSION }}"
+
+    - name: Terraform Init
+      shell: bash
+      run: terraform init
