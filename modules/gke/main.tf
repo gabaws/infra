@@ -11,7 +11,6 @@ terraform {
   }
 }
 
-# GKE Clusters
 resource "google_container_cluster" "clusters" {
   for_each = var.clusters
 
@@ -21,25 +20,23 @@ resource "google_container_cluster" "clusters" {
   # Mantém a proteção contra deleção desativada para gerenciamento via Terraform.
   deletion_protection = false
 
-  # Remove default node pool
   remove_default_node_pool = true
   initial_node_count       = 1
 
-  # Network configuration - find subnet matching cluster region
+ 
   network = var.network
   subnetwork = [
     for subnet_name, subnet in var.subnets : subnet.name
     if subnet.region == each.value.region
   ][0]
 
-  # Private cluster configuration
+
   private_cluster_config {
     enable_private_nodes    = each.value.enable_private_nodes
     enable_private_endpoint = each.value.enable_private_endpoint
     master_ipv4_cidr_block  = try(each.value.master_ipv4_cidr_block, "172.16.0.0/28")
   }
 
-  # Master authorized networks
   dynamic "master_authorized_networks_config" {
     for_each = length(each.value.master_authorized_networks) > 0 ? [1] : []
     content {
@@ -53,7 +50,6 @@ resource "google_container_cluster" "clusters" {
     }
   }
 
-  # IP allocation policy for pods and services
   ip_allocation_policy {
     cluster_secondary_range_name = try([
       for subnet_name, subnet in var.subnets : [
@@ -69,25 +65,20 @@ resource "google_container_cluster" "clusters" {
     ][0][0], "services")
   }
 
-  # Enable Workload Identity
   workload_identity_config {
     workload_pool = "${var.project_id}.svc.id.goog"
   }
 
-  # Release channel
   release_channel {
     channel = "REGULAR"
   }
 
-  # Network policy
   network_policy {
     enabled = true
   }
 
-  # Enable intranode visibility
   enable_intranode_visibility = true
 
-  # Addons
   addons_config {
     http_load_balancing {
       disabled = false
@@ -103,7 +94,6 @@ resource "google_container_cluster" "clusters" {
     }
   }
 
-  # Maintenance window
     maintenance_policy {
       recurring_window {
         start_time = "2024-01-01T03:00:00Z"
@@ -112,7 +102,6 @@ resource "google_container_cluster" "clusters" {
       }
     }
 
-  # Logging and monitoring
   logging_config {
     enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
   }
@@ -124,25 +113,21 @@ resource "google_container_cluster" "clusters" {
     }
   }
 
-  # Binary authorization (optional)
   binary_authorization {
     evaluation_mode = "PROJECT_SINGLETON_POLICY_ENFORCE"
   }
 
-  # Resource labels
   resource_labels = {
     environment = "production"
     managed-by  = "terraform"
   }
 
-  # Timeouts para garantir que a destruição seja completa antes de recriar
   timeouts {
     create = "45m"
     update = "45m"
     delete = "30m"
   }
 
-  # Lifecycle para garantir que a destruição seja completa
   lifecycle {
     create_before_destroy = false
     ignore_changes = [
@@ -152,7 +137,6 @@ resource "google_container_cluster" "clusters" {
   }
 }
 
-# Node pools for each cluster
 resource "google_container_node_pool" "node_pools" {
   for_each = {
     for k, v in var.clusters : k => v
@@ -182,24 +166,20 @@ resource "google_container_node_pool" "node_pools" {
     preemptible     = try(each.value.preemptible, false)
     service_account = try(each.value.service_account, null)
 
-    # Workload Identity
     workload_metadata_config {
       mode = "GKE_METADATA"
     }
 
-    # OAuth scopes
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform",
       "https://www.googleapis.com/auth/logging.write",
       "https://www.googleapis.com/auth/monitoring",
     ]
 
-    # Labels
     labels = {
       cluster = each.key
     }
 
-    # Taints (optional)
     dynamic "taint" {
       for_each = try(each.value.taints, [])
       content {
