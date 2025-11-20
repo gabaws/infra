@@ -1,4 +1,3 @@
-# Provider configuration
 provider "google" {
   project = var.project_id
   region  = var.region
@@ -11,7 +10,7 @@ provider "google-beta" {
 
 data "google_client_config" "default" {}
 
-# Enable required APIs
+
 resource "google_project_service" "required_apis" {
   for_each = toset([
     "compute.googleapis.com",
@@ -36,7 +35,6 @@ resource "google_project_service" "required_apis" {
   disable_on_destroy = false
 }
 
-# VPC Module
 module "vpc" {
   source = "./modules/vpc"
 
@@ -47,16 +45,13 @@ module "vpc" {
 
   subnets = var.subnets
 
-  # Private Google Access
   enable_private_google_access = true
 
-  # Secondary ranges for GKE pods and services
   secondary_ranges = var.secondary_ranges
 
   depends_on = [google_project_service.required_apis]
 }
 
-# GKE Clusters Module
 module "gke_clusters" {
   count = var.enable_gke ? 1 : 0
 
@@ -75,7 +70,6 @@ module "gke_clusters" {
   ]
 }
 
-# Anthos Service Mesh Module (inclui configuração de multi-cluster)
 module "anthos_service_mesh" {
   count = var.enable_asm && var.enable_gke ? 1 : 0
 
@@ -92,7 +86,6 @@ module "anthos_service_mesh" {
   ]
 }
 
-# DNS público para o domínio raiz
 module "dns" {
   source = "./modules/dns"
 
@@ -102,7 +95,6 @@ module "dns" {
   depends_on = [google_project_service.required_apis]
 }
 
-# Certificado gerenciado (wildcard) para o domínio raiz
 module "certificate" {
   source = "./modules/certificate"
 

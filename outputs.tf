@@ -1,45 +1,42 @@
 output "project_id" {
-  description = "The ID of the project being used"
+  description = "ID do projeto usado"
   value       = var.project_id
 }
 
 output "network_name" {
-  description = "The name of the VPC network"
+  description = "Nome da VPC"
   value       = module.vpc.network_name
 }
 
 output "network_self_link" {
-  description = "The self link of the VPC network"
+  description = "O link próprio da rede VPC"
   value       = module.vpc.network_self_link
 }
 
 output "subnets" {
-  description = "The created subnets"
+  description = "Subnets criadas"
   value       = module.vpc.subnets
 }
 
 output "gke_clusters" {
-  description = "GKE cluster information"
+  description = "Informações do cluster GKE"
   value       = var.enable_gke ? module.gke_clusters[0].cluster_info : null
   sensitive   = true
 }
 
 output "anthos_service_mesh_status" {
-  description = "Anthos Service Mesh configuration status"
+  description = "Status de configuração do Anthos Service Mesh"
   value       = var.enable_asm && var.enable_gke ? module.anthos_service_mesh[0].mesh_status : null
   sensitive   = true
 }
 
-# Multi-cluster Ingress output removed - feature must be enabled manually
-# See modules/anthos-service-mesh/main.tf for instructions
-
 output "gke_hub_membership_ids" {
-  description = "GKE Hub membership IDs for multi-cluster configuration"
+  description = "IDs de associação do GKE Hub para configuração de vários clusters"
   value       = var.enable_asm && var.enable_gke ? module.anthos_service_mesh[0].membership_ids : null
 }
 
 output "cluster_endpoints" {
-  description = "GKE cluster endpoints"
+  description = "Enpoints clusters GKE"
   value = var.enable_gke ? {
     for k, v in module.gke_clusters[0].cluster_info : k => {
       endpoint   = v.endpoint
@@ -50,7 +47,7 @@ output "cluster_endpoints" {
 }
 
 output "dns_nameservers" {
-  description = "Nameservers do Cloud DNS da zona pública (aponte no GoDaddy)"
+  description = "Nameservers do Cloud DNS da zona pública"
   value       = try(module.dns.nameservers, [])
 }
 
@@ -60,7 +57,7 @@ output "certificate_manager_certificate" {
 }
 
 output "certificate_map_id" {
-  description = "ID completo do Certificate Map para uso no Gateway API"
+  description = "ID completo do Certificate Map"
   value       = try(module.certificate.certificate_map_id, null)
 }
 

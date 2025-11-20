@@ -126,10 +126,10 @@ Esta arquitetura implementa comunicação entre serviços distribuídos em múlt
 └───────────┼────────────────────────────────────┼────────────────────────────┘
             │                                    │
             │                                    │
-    ┌───────┴────────┐                  ┌───────┴────────┐
-    │  ServiceExport │                  │  ServiceExport │
-    │  (Cluster A)   │                  │  (Cluster B)   │
-    └───────┬────────┘                  └───────┬────────┘
+    ┌───────┴────────┐                   ┌───────┴────────┐
+    │  ServiceExport │                   │  ServiceExport │
+    │  (Cluster A)   │                   │  (Cluster B)   │
+    └───────┬────────┘                   └───────┬────────┘
             │                                    │
             ▼                                    ▼
 

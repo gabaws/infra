@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 set +e
 
 PROJECT_ID="infra-474223"
