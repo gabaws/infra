@@ -1,15 +1,15 @@
 output "bucket_name" {
-  description = "Name of the GCS bucket"
+  description = "Nome do bucket GCS"
   value       = google_storage_bucket.terraform_state.name
 }
 
 output "bucket_url" {
-  description = "URL of the GCS bucket"
+  description = "URL do bucket GCS"
   value       = google_storage_bucket.terraform_state.url
 }
 
 output "bucket_self_link" {
-  description = "Self link of the GCS bucket"
+  description = "Auto-vinculação do bucket GCS"
   value       = google_storage_bucket.terraform_state.self_link
 }
 
