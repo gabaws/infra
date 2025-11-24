@@ -153,8 +153,9 @@ resource "google_container_node_pool" "node_pools" {
   location   = each.value.zone
   cluster    = google_container_cluster.clusters[each.key].name
   project    = var.project_id
-  # Usa pelo menos min_node_count se initial_node_count for 0, mas permite 0 se autoscaling iniciar em 0
-  node_count = max(each.value.initial_node_count, 0)
+  # Com autoscaling habilitado, o node_count inicial é usado apenas na criação
+  # O autoscaler gerencia o número de nodes depois disso
+  node_count = each.value.initial_node_count
 
   autoscaling {
     min_node_count = each.value.min_node_count
@@ -199,5 +200,13 @@ resource "google_container_node_pool" "node_pools" {
   }
 
   depends_on = [google_container_cluster.clusters]
+
+  lifecycle {
+    # Ignora mudanças no node_count quando autoscaling está habilitado
+    # O autoscaler gerencia o número de nodes dinamicamente
+    ignore_changes = [
+      node_count
+    ]
+  }
 }
 
