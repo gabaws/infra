@@ -154,12 +154,12 @@ Error: googleapi: Error 409: Already exists: projects/.../clusters/...
 
 **Prevenção**: Os timeouts foram configurados no módulo GKE para garantir que a destruição seja completa. Se o problema persistir, aguarde pelo menos 10 minutos após a destruição antes de tentar recriar.
 
-## 🔗 Anthos Service Mesh (ASM)
+## 🔗 Anthos Service Mesh (ASM) / Cloud Service Mesh
 
 O projeto provisiona automaticamente:
 
 1. **Registro no Fleet**: Ambos os clusters são registrados automaticamente no GKE Hub Fleet
-2. **Anthos Service Mesh**: A feature do ASM é habilitada no Fleet e configurada com gerenciamento automático
+2. **Anthos Service Mesh (Cloud Service Mesh)**: A feature do ASM é habilitada no Fleet e configurada com gerenciamento automático usando o provider `google-beta`
 3. **Feature Membership**: Cada cluster é registrado na feature do ASM para compartilhar a mesma malha de serviços
 
 ### Como Funciona
@@ -167,6 +167,15 @@ O projeto provisiona automaticamente:
 - Os clusters `master-engine` e `app-engine` fazem parte da mesma **malha de serviços (mesh)**
 - Comunicação entre clusters é feita através do ASM com mTLS automático
 - O gerenciamento é automático (`MANAGEMENT_AUTOMATIC`), então o ASM é instalado e mantido automaticamente pelo Google Cloud
+- **Descoberta automática de serviços**: Com clusters na mesma VPC, Fleet e ASM com gerenciamento automático, a descoberta de serviços entre clusters funciona automaticamente
+
+### Configuração Técnica
+
+O módulo `anthos-service-mesh` usa explicitamente o provider `google-beta` para os recursos:
+- `google_gke_hub_feature` (feature do Service Mesh)
+- `google_gke_hub_feature_membership` (membership dos clusters)
+
+Isso garante que o Cloud Service Mesh seja habilitado corretamente e apareça como configurado no Feature Manager do GCP.
 
 ### Verificar Status do ASM
 
@@ -179,14 +188,42 @@ terraform output anthos_service_mesh_status
 
 # Listar clusters no Fleet
 gcloud container fleet memberships list --project=infra-474223
+
+# Verificar feature memberships (deve mostrar MANAGEMENT_AUTOMATIC)
+gcloud container hub memberships describe master-engine-membership --project=infra-474223 --location=global
+gcloud container hub memberships describe app-engine-membership --project=infra-474223 --location=global
 ```
+
+### Troubleshooting: Feature não aparece como configurado
+
+Se o Cloud Service Mesh não aparecer como habilitado no Feature Manager:
+
+1. **Verificar se o provider google-beta está configurado**:
+   ```bash
+   terraform providers
+   # Deve mostrar google-beta
+   ```
+
+2. **Verificar se os recursos foram criados com o provider correto**:
+   ```bash
+   terraform state list | grep anthos_service_mesh
+   # Deve mostrar recursos com provider google-beta
+   ```
+
+3. **Reaplicar o módulo se necessário**:
+   ```bash
+   terraform apply -target=module.anthos_service_mesh
+   ```
+
+4. **Aguardar alguns minutos**: Após aplicar, pode levar 5-10 minutos para o Feature Manager atualizar o status
 
 ### Notas Importantes
 
-- ✅ O ASM é provisionado automaticamente via Terraform
+- ✅ O ASM é provisionado automaticamente via Terraform usando o provider `google-beta`
 - ✅ Ambos os clusters compartilham a mesma malha de serviços
 - ✅ mTLS é habilitado automaticamente para comunicação segura entre clusters
 - ✅ **Descoberta automática de serviços**: Com clusters na mesma VPC, Fleet e ASM com gerenciamento automático, a descoberta de serviços entre clusters funciona automaticamente
+- ⚠️ **Provider google-beta obrigatório**: Os recursos do Service Mesh devem usar o provider `google-beta` para funcionar corretamente
 - ℹ️ Exemplos de uso e testes estão disponíveis em `app-demo/` (não fazem parte do provisionamento)
 
 ## 🧪 Testes e Validação da Arquitetura

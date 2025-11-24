@@ -28,7 +28,10 @@ resource "google_gke_hub_membership" "memberships" {
 }
 
 # Feature for Anthos Service Mesh
+# Usa provider google-beta para garantir suporte completo ao Cloud Service Mesh
 resource "google_gke_hub_feature" "mesh" {
+  provider = google-beta
+  
   name     = "servicemesh"
   location = "global"
   project  = var.project_id
@@ -68,7 +71,10 @@ resource "null_resource" "force_delete_mesh_feature" {
 
 # Feature Membership for each cluster
 # Registra cada cluster no Anthos Service Mesh com gerenciamento automático
+# Usa provider google-beta para garantir suporte completo ao Cloud Service Mesh
 resource "google_gke_hub_feature_membership" "mesh_feature_membership" {
+  provider = google-beta
+  
   for_each = var.clusters
 
   location   = "global"
