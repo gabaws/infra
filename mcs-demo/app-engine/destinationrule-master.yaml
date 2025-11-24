@@ -1,0 +1,18 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: hello-master-engine
+  namespace: mcs-demo
+spec:
+  host: hello-master-engine.mcs-demo.global
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+    loadBalancer:
+      simple: ROUND_ROBIN
+    localityLbSetting:
+      enabled: true
+      distribute:
+      - from: us-east1/*
+        to:
+          "us-central1/*": 100
