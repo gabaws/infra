@@ -134,6 +134,40 @@ Após obter os IPs dos gateways, atualize os ServiceEntry:
 - **ServiceEntry API Reference**: https://istio.io/latest/docs/reference/config/networking/service-entry/
 - **Gateway API Reference**: https://istio.io/latest/docs/reference/config/networking/gateway/
 
+## 🔍 Diagnóstico de Problemas
+
+Se os pods do gateway estiverem presos em `ContainerCreating` ou não estiverem iniciando corretamente, execute o script de diagnóstico:
+
+```bash
+cd mcs-demo/gateway
+chmod +x diagnostico.sh
+./diagnostico.sh
+```
+
+O script verifica:
+- ✅ Status dos pods e deployments
+- ✅ ConfigMaps necessários (istio-ca-root-cert)
+- ✅ ServiceAccounts e permissões
+- ✅ Recursos dos nós (CPU, memória)
+- ✅ Eventos e logs relevantes
+- ✅ Configuração de volumes e containers
+
+### Comandos Úteis para Troubleshooting
+
+```bash
+# Ver eventos do pod
+kubectl describe pod <nome-do-pod> -n istio-system --context=<contexto>
+
+# Ver logs do pod (se houver init containers)
+kubectl logs <nome-do-pod> -n istio-system --context=<contexto>
+
+# Verificar ConfigMaps disponíveis
+kubectl get configmap -n istio-system --context=<contexto>
+
+# Verificar ServiceAccount
+kubectl get serviceaccount istio-eastwestgateway-service-account -n istio-system --context=<contexto>
+```
+
 ## ⚠️ Notas Importantes
 
 - O gateway East-West **não é criado automaticamente** pelo ASM gerenciado
@@ -141,4 +175,5 @@ Após obter os IPs dos gateways, atualize os ServiceEntry:
 - Os gateways são expostos como LoadBalancer (IPs públicos)
 - Para produção, considere adicionar regras de firewall para restringir acesso
 - A comunicação usa mTLS automaticamente via ASM
+- O ConfigMap `istio-env` **não existe** no ASM gerenciado - não deve ser referenciado nos manifestos
 
