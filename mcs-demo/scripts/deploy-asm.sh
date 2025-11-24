@@ -51,16 +51,28 @@ APP_ENGINE_GW_IP=$(kubectl get svc -n istio-system --context=$APP_ENGINE_CTX ist
 MASTER_ENGINE_GW_IP=$(kubectl get svc -n istio-system --context=$MASTER_ENGINE_CTX istio-eastwestgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
 
 if [ -z "$APP_ENGINE_GW_IP" ]; then
-    echo "❌ ERRO: Não foi possível obter o IP do East-West Gateway do cluster app-engine"
-    echo "   Verifique se o gateway está instalado:"
-    echo "   kubectl get svc -n istio-system --context=$APP_ENGINE_CTX istio-eastwestgateway"
+    echo "❌ ERRO: East-West Gateway não encontrado no cluster app-engine"
+    echo ""
+    echo "💡 O East-West Gateway precisa ser instalado antes do deploy."
+    echo "   Execute o script de instalação:"
+    echo ""
+    echo "   ./scripts/install-eastwest-gateway.sh"
+    echo ""
+    echo "   Ou instale manualmente seguindo a documentação em:"
+    echo "   https://cloud.google.com/service-mesh/docs/managed/service-mesh#east-west-gateway"
     exit 1
 fi
 
 if [ -z "$MASTER_ENGINE_GW_IP" ]; then
-    echo "❌ ERRO: Não foi possível obter o IP do East-West Gateway do cluster master-engine"
-    echo "   Verifique se o gateway está instalado:"
-    echo "   kubectl get svc -n istio-system --context=$MASTER_ENGINE_CTX istio-eastwestgateway"
+    echo "❌ ERRO: East-West Gateway não encontrado no cluster master-engine"
+    echo ""
+    echo "💡 O East-West Gateway precisa ser instalado antes do deploy."
+    echo "   Execute o script de instalação:"
+    echo ""
+    echo "   ./scripts/install-eastwest-gateway.sh"
+    echo ""
+    echo "   Ou instale manualmente seguindo a documentação em:"
+    echo "   https://cloud.google.com/service-mesh/docs/managed/service-mesh#east-west-gateway"
     exit 1
 fi
 

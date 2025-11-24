@@ -10,9 +10,3 @@ spec:
       mode: ISTIO_MUTUAL
     loadBalancer:
       simple: ROUND_ROBIN
-    localityLbSetting:
-      enabled: true
-      distribute:
-      - from: us-east1/*
-        to:
-          "us-central1/*": 100

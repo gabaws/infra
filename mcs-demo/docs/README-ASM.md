@@ -10,6 +10,22 @@ Este diretório contém a configuração para testar comunicação entre cluster
 4. ✅ O **East-West Gateway** está instalado em ambos os clusters
 5. ✅ `kubectl` e `gcloud` configurados
 
+### ⚠️ Instalar East-West Gateway (Obrigatório)
+
+O East-West Gateway **não é criado automaticamente** pelo ASM gerenciado. Você precisa instalá-lo manualmente:
+
+```bash
+cd mcs-demo/scripts
+./install-eastwest-gateway.sh
+```
+
+Este script irá:
+- Instalar o gateway em ambos os clusters
+- Configurar como LoadBalancer
+- Aguardar os IPs ficarem disponíveis
+
+**Aguarde 2-3 minutos** após a instalação para os IPs ficarem prontos.
+
 ## 🔧 Componentes
 
 ### Manifestos ASM
