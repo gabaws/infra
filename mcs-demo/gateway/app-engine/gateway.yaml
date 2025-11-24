@@ -1,0 +1,125 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: istio-eastwestgateway
+  namespace: istio-system
+  labels:
+    istio: eastwestgateway
+    app: istio-eastwestgateway
+  annotations:
+    cloud.google.com/load-balancer-type: "External"
+spec:
+  type: LoadBalancer
+  selector:
+    istio: eastwestgateway
+    app: istio-eastwestgateway
+  ports:
+  - name: tls
+    port: 15443
+    targetPort: 15443
+    protocol: TCP
+  - name: tcp-istiod
+    port: 15012
+    targetPort: 15012
+    protocol: TCP
+  - name: tcp-webhook
+    port: 15017
+    targetPort: 15017
+    protocol: TCP
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: istio-eastwestgateway-service-account
+  namespace: istio-system
+  labels:
+    istio: eastwestgateway
+    app: istio-eastwestgateway
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: istio-eastwestgateway
+  namespace: istio-system
+  labels:
+    istio: eastwestgateway
+    app: istio-eastwestgateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      istio: eastwestgateway
+      app: istio-eastwestgateway
+  template:
+    metadata:
+      labels:
+        istio: eastwestgateway
+        app: istio-eastwestgateway
+        istio.io/rev: asm-managed
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      serviceAccountName: istio-eastwestgateway-service-account
+      containers:
+      - name: istio-proxy
+        image: auto
+        env:
+        - name: ISTIO_META_ROUTER_MODE
+          value: "sni-dnat"
+        - name: ISTIO_META_CLUSTER_ID
+          value: "app-engine"
+        - name: ISTIO_META_MESH_ID
+          value: "proj-MESH_ID"  # Substitua MESH_ID pelo project number
+        - name: ISTIO_META_NETWORK
+          value: "network1"
+        ports:
+        - containerPort: 15443
+          protocol: TCP
+        - containerPort: 15012
+          protocol: TCP
+        - containerPort: 15017
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 2000m
+            memory: 1024Mi
+        volumeMounts:
+        - mountPath: /var/run/secrets/istio
+          name: istiod-ca-cert
+        - mountPath: /var/run/secrets/tokens
+          name: istio-token
+        - mountPath: /etc/istio/proxy
+          name: istio-env
+        - mountPath: /var/lib/istio/data
+          name: istio-data
+        - mountPath: /etc/istio/pod
+          name: istio-podinfo
+      volumes:
+      - name: istiod-ca-cert
+        configMap:
+          name: istio-ca-root-cert
+      - name: istio-token
+        projected:
+          sources:
+          - serviceAccountToken:
+              path: istio-token
+              expirationSeconds: 43200
+              audience: istio-ca
+      - name: istio-env
+        configMap:
+          name: istio-env
+      - name: istio-data
+        emptyDir: {}
+      - name: istio-podinfo
+        downwardAPI:
+          items:
+          - path: "labels"
+            fieldRef:
+              fieldPath: metadata.labels
+          - path: "annotations"
+            fieldRef:
+              fieldPath: metadata.annotations
+
