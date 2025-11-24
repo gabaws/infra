@@ -126,18 +126,64 @@ obter_ca_cert() {
     # Se não encontrou o pod, tenta usar certificado do cluster como fallback
     if [ -z "$ISTIOD_POD" ]; then
         echo "   ⚠️  Pod istiod não encontrado. Isso pode ser normal no ASM gerenciado." >&2
-        echo "   💡 Tentando usar certificado CA do cluster Kubernetes como fallback..." >&2
+        echo "   💡 Tentando obter certificado CA de outras fontes..." >&2
         
-        # Obtém o certificado CA do cluster como fallback
-        CLUSTER_CA=$(kubectl config view --context=$context --minify -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' 2>/dev/null | base64 -d || echo "")
+        # Tenta obter de secrets do istio
+        echo "      Tentando obter de secrets..." >&2
+        CA_SECRET=$(kubectl get secrets -n istio-system --context=$context -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null | grep -i "istio.*ca\|ca.*istio\|root" | head -1 || echo "")
+        if [ -n "$CA_SECRET" ]; then
+            echo "         Secret encontrado: $CA_SECRET" >&2
+            CA_CERT=$(kubectl get secret -n istio-system --context=$context $CA_SECRET -o jsonpath='{.data.root-cert}' 2>/dev/null | base64 -d || \
+                     kubectl get secret -n istio-system --context=$context $CA_SECRET -o jsonpath='{.data.root-cert\.pem}' 2>/dev/null | base64 -d || \
+                     kubectl get secret -n istio-system --context=$context $CA_SECRET -o jsonpath='{.data.cert-chain\.pem}' 2>/dev/null | base64 -d || echo "")
+            if [ -n "$CA_CERT" ] && [ ${#CA_CERT} -gt 100 ]; then
+                echo "   ✅ Certificado CA obtido do secret $CA_SECRET" >&2
+                echo "$CA_CERT"
+                return 0
+            fi
+        fi
+        
+        # Tenta obter o certificado CA do cluster Kubernetes via gcloud (mais confiável)
+        echo "      Tentando obter certificado CA do cluster Kubernetes via gcloud..." >&2
+        # O formato do context é: gke_PROJECT_ID_LOCATION_CLUSTER
+        # Exemplo: gke_infra-474223_us-east1-b_app-engine
+        CLUSTER_NAME=$(echo $context | awk -F'_' '{print $NF}' || echo "")
+        CLUSTER_LOCATION=$(echo $context | awk -F'_' '{print $(NF-1)}' || echo "")
+        if [ -n "$CLUSTER_NAME" ] && [ -n "$CLUSTER_LOCATION" ]; then
+            echo "         Cluster: $CLUSTER_NAME, Location: $CLUSTER_LOCATION" >&2
+            CLUSTER_CA=$(gcloud container clusters describe $CLUSTER_NAME \
+                --location=$CLUSTER_LOCATION \
+                --project=$PROJECT_ID \
+                --format="value(masterAuth.clusterCaCertificate)" 2>/dev/null || echo "")
+        else
+            echo "         ⚠️  Não foi possível extrair nome/location do context: $context" >&2
+        fi
+        
+        # Se ainda não encontrou, tenta via kubectl config
+        if [ -z "$CLUSTER_CA" ] || [ ${#CLUSTER_CA} -lt 100 ]; then
+            echo "      Tentando obter via kubectl config..." >&2
+            CLUSTER_CA=$(kubectl config view --context=$context --minify -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' 2>/dev/null | base64 -d 2>/dev/null || echo "")
+        fi
+        
+        # Se não encontrou como base64, tenta obter do arquivo de certificado
+        if [ -z "$CLUSTER_CA" ] || [ ${#CLUSTER_CA} -lt 100 ]; then
+            CERT_FILE=$(kubectl config view --context=$context --minify -o jsonpath='{.clusters[0].cluster.certificate-authority}' 2>/dev/null || echo "")
+            if [ -n "$CERT_FILE" ] && [ -f "$CERT_FILE" ]; then
+                echo "      Tentando obter do arquivo: $CERT_FILE" >&2
+                CLUSTER_CA=$(cat "$CERT_FILE" 2>/dev/null || echo "")
+            fi
+        fi
+        
         if [ -n "$CLUSTER_CA" ] && [ ${#CLUSTER_CA} -gt 100 ]; then
-            echo "   ✅ Certificado CA do cluster obtido (será usado como fallback)" >&2
+            echo "   ⚠️  Certificado CA do cluster Kubernetes obtido (pode não ser ideal para ASM)" >&2
+            echo "   ⚠️  Este é um fallback - para produção, use o certificado CA do Istio" >&2
             echo "$CLUSTER_CA"
             return 0
         fi
         
-        # Se ainda não conseguiu, mostra erro detalhado
-        echo "   ❌ ERRO: Não foi possível obter certificado CA" >&2
+        # Se ainda não conseguiu, mostra erro detalhado com instruções
+        echo "" >&2
+        echo "   ❌ ERRO: Não foi possível obter certificado CA automaticamente" >&2
         echo "   💡 Verificando pods e deployments disponíveis em istio-system..." >&2
         echo "" >&2
         echo "   Pods:" >&2
@@ -146,8 +192,13 @@ obter_ca_cert() {
         echo "   Deployments:" >&2
         kubectl get deployment -n istio-system --context=$context 2>/dev/null | head -10 >&2 || true
         echo "" >&2
-        echo "   💡 No ASM gerenciado, o istiod pode ser gerenciado pelo Google Cloud" >&2
-        echo "   💡 O certificado CA do cluster Kubernetes será usado como fallback" >&2
+        echo "   Secrets:" >&2
+        kubectl get secrets -n istio-system --context=$context 2>/dev/null | head -10 >&2 || true
+        echo "" >&2
+        echo "   💡 No ASM gerenciado, você pode precisar obter o certificado manualmente:" >&2
+        echo "      1. Verifique se há pods do istiod em outros namespaces" >&2
+        echo "      2. Ou use um certificado CA válido do Istio" >&2
+        echo "      3. O gateway pode funcionar com um certificado temporário" >&2
         return 1
     fi
     
