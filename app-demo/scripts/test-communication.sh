@@ -11,7 +11,9 @@ MASTER_ENGINE_LOCATION="us-central1-a"
 APP_ENGINE_CTX="gke_${PROJECT_ID}_${APP_ENGINE_LOCATION}_${APP_ENGINE_CLUSTER}"
 MASTER_ENGINE_CTX="gke_${PROJECT_ID}_${MASTER_ENGINE_LOCATION}_${MASTER_ENGINE_CLUSTER}"
 
-echo "🧪 Teste de Comunicação Multi-cluster Services"
+echo "🧪 Teste de Comunicação Multi-cluster com Cloud Service Mesh"
+echo ""
+echo "📋 Usando descoberta automática de serviços (DNS padrão do Kubernetes)"
 echo ""
 
 echo "📋 Verificando status dos pods..."
@@ -32,56 +34,6 @@ kubectl get svc -n mcs-demo --context=$APP_ENGINE_CTX
 echo ""
 echo "Cluster $MASTER_ENGINE_CLUSTER:"
 kubectl get svc -n mcs-demo --context=$MASTER_ENGINE_CTX
-
-echo ""
-echo "📋 Verificando ServiceExports..."
-echo ""
-echo "Cluster $APP_ENGINE_CLUSTER:"
-kubectl get serviceexport -n mcs-demo --context=$APP_ENGINE_CTX
-
-echo ""
-echo "Cluster $MASTER_ENGINE_CLUSTER:"
-kubectl get serviceexport -n mcs-demo --context=$MASTER_ENGINE_CTX
-
-echo ""
-echo "📋 Verificando ServiceImports (criados automaticamente pelo MCS)..."
-echo ""
-echo "Cluster $APP_ENGINE_CLUSTER:"
-SERVICEIMPORTS_APP=$(kubectl get serviceimport -n mcs-demo --context=$APP_ENGINE_CTX 2>/dev/null)
-if [ -n "$SERVICEIMPORTS_APP" ]; then
-  echo "$SERVICEIMPORTS_APP"
-else
-  echo "  ⚠️  Nenhum ServiceImport encontrado"
-fi
-
-echo ""
-echo "Cluster $MASTER_ENGINE_CLUSTER:"
-SERVICEIMPORTS_MASTER=$(kubectl get serviceimport -n mcs-demo --context=$MASTER_ENGINE_CTX 2>/dev/null)
-if [ -n "$SERVICEIMPORTS_MASTER" ]; then
-  echo "$SERVICEIMPORTS_MASTER"
-else
-  echo "  ⚠️  Nenhum ServiceImport encontrado"
-fi
-
-echo ""
-echo "📋 Verificando serviços MCS (gke-mcs-*)..."
-echo ""
-echo "Cluster $APP_ENGINE_CLUSTER:"
-MCS_SERVICES_APP=$(kubectl get svc -n mcs-demo --context=$APP_ENGINE_CTX | grep gke-mcs || echo "")
-if [ -n "$MCS_SERVICES_APP" ]; then
-  echo "$MCS_SERVICES_APP"
-else
-  echo "  ⚠️  Nenhum serviço MCS encontrado"
-fi
-
-echo ""
-echo "Cluster $MASTER_ENGINE_CLUSTER:"
-MCS_SERVICES_MASTER=$(kubectl get svc -n mcs-demo --context=$MASTER_ENGINE_CTX | grep gke-mcs || echo "")
-if [ -n "$MCS_SERVICES_MASTER" ]; then
-  echo "$MCS_SERVICES_MASTER"
-else
-  echo "  ⚠️  Nenhum serviço MCS encontrado"
-fi
 
 echo ""
 echo "📋 Verificando sidecar injection nos pods..."
@@ -130,7 +82,6 @@ if [ -z "$APP_POD" ]; then
   exit 1
 fi
 
-
 APP_POD_STATUS=$(kubectl get pod $APP_POD -n mcs-demo --context=$APP_ENGINE_CTX -o jsonpath='{.status.phase}' 2>/dev/null)
 APP_POD_READY=$(kubectl get pod $APP_POD -n mcs-demo --context=$APP_ENGINE_CTX -o jsonpath='{.status.containerStatuses[?(@.name=="hello-server")].ready}' 2>/dev/null)
 
@@ -141,18 +92,15 @@ if [ "$APP_POD_STATUS" != "Running" ] || [ "$APP_POD_READY" != "true" ]; then
   echo ""
   echo "🔍 Verificando eventos do pod..."
   kubectl describe pod $APP_POD -n mcs-demo --context=$APP_ENGINE_CTX 2>/dev/null | tail -20
-  echo ""
-  echo "💡 Execute o script de diagnóstico para mais detalhes:"
-  echo "   ./scripts/diagnose-pending-pods.sh"
   exit 1
 fi
 
 echo "📦 Usando pod: $APP_POD"
-echo "🌐 Testando comunicação para hello-master-engine.mcs-demo.svc.clusterset.local..."
+echo "🌐 Testando comunicação para hello-master-engine.mcs-demo.svc.cluster.local..."
 echo ""
 
 RESULT=$(kubectl exec $APP_POD -n mcs-demo --context=$APP_ENGINE_CTX -c hello-server -- \
-  curl -s -w "\nHTTP_CODE:%{http_code}" --max-time 10 http://hello-master-engine.mcs-demo.svc.clusterset.local:80 2>&1)
+  curl -s -w "\nHTTP_CODE:%{http_code}" --max-time 10 http://hello-master-engine.mcs-demo.svc.cluster.local:80 2>&1)
 
 HTTP_CODE=$(echo "$RESULT" | grep "HTTP_CODE" | cut -d: -f2)
 BODY=$(echo "$RESULT" | grep -v "HTTP_CODE")
@@ -168,11 +116,11 @@ else
   echo "🔍 Diagnóstico adicional:"
   echo "Testando DNS..."
   kubectl exec $APP_POD -n mcs-demo --context=$APP_ENGINE_CTX -c hello-server -- \
-    nslookup hello-master-engine.mcs-demo.svc.clusterset.local 2>&1 || true
+    nslookup hello-master-engine.mcs-demo.svc.cluster.local 2>&1 || true
   echo ""
   echo "Testando conectividade básica..."
   kubectl exec $APP_POD -n mcs-demo --context=$APP_ENGINE_CTX -c hello-server -- \
-    ping -c 2 hello-master-engine.mcs-demo.svc.clusterset.local 2>&1 || true
+    ping -c 2 hello-master-engine.mcs-demo.svc.cluster.local 2>&1 || true
 fi
 
 echo ""
@@ -195,18 +143,15 @@ if [ "$MASTER_POD_STATUS" != "Running" ] || [ "$MASTER_POD_READY" != "true" ]; t
   echo ""
   echo "🔍 Verificando eventos do pod..."
   kubectl describe pod $MASTER_POD -n mcs-demo --context=$MASTER_ENGINE_CTX 2>/dev/null | tail -20
-  echo ""
-  echo "💡 Execute o script de diagnóstico para mais detalhes:"
-  echo "   ./scripts/diagnose-pending-pods.sh"
   exit 1
 fi
 
 echo "📦 Usando pod: $MASTER_POD"
-echo "🌐 Testando comunicação para hello-app-engine.mcs-demo.svc.clusterset.local..."
+echo "🌐 Testando comunicação para hello-app-engine.mcs-demo.svc.cluster.local..."
 echo ""
 
 RESULT=$(kubectl exec $MASTER_POD -n mcs-demo --context=$MASTER_ENGINE_CTX -c hello-server -- \
-  curl -s -w "\nHTTP_CODE:%{http_code}" --max-time 10 http://hello-app-engine.mcs-demo.svc.clusterset.local:80 2>&1)
+  curl -s -w "\nHTTP_CODE:%{http_code}" --max-time 10 http://hello-app-engine.mcs-demo.svc.cluster.local:80 2>&1)
 
 HTTP_CODE=$(echo "$RESULT" | grep "HTTP_CODE" | cut -d: -f2)
 BODY=$(echo "$RESULT" | grep -v "HTTP_CODE")
@@ -222,22 +167,19 @@ else
   echo "🔍 Diagnóstico adicional:"
   echo "Testando DNS..."
   kubectl exec $MASTER_POD -n mcs-demo --context=$MASTER_ENGINE_CTX -c hello-server -- \
-    nslookup hello-app-engine.mcs-demo.svc.clusterset.local 2>&1 || true
+    nslookup hello-app-engine.mcs-demo.svc.cluster.local 2>&1 || true
   echo ""
   echo "Testando conectividade básica..."
   kubectl exec $MASTER_POD -n mcs-demo --context=$MASTER_ENGINE_CTX -c hello-server -- \
-    ping -c 2 hello-app-engine.mcs-demo.svc.clusterset.local 2>&1 || true
+    ping -c 2 hello-app-engine.mcs-demo.svc.cluster.local 2>&1 || true
 fi
 
 echo ""
 echo "✅ Testes concluídos!"
 echo ""
-echo "💡 Resumo das verificações:"
-echo "   - ServiceExports: $(if [ -n "$(kubectl get serviceexport -n mcs-demo --context=$APP_ENGINE_CTX 2>/dev/null)" ]; then echo "✅ Presentes"; else echo "⚠️  Ausentes"; fi)"
-echo "   - ServiceImports: $(if [ -n "$SERVICEIMPORTS_APP" ] && [ -n "$SERVICEIMPORTS_MASTER" ]; then echo "✅ Presentes"; else echo "⚠️  Ausentes"; fi)"
-echo "   - Serviços MCS (gke-mcs-*): $(if [ -n "$MCS_SERVICES_APP" ] && [ -n "$MCS_SERVICES_MASTER" ]; then echo "✅ Presentes"; else echo "⚠️  Ausentes"; fi)"
+echo "💡 Resumo:"
 echo "   - Sidecar Istio: $(if echo "$CONTAINERS" | grep -q "istio-proxy"; then echo "✅ Presente"; else echo "⚠️  Ausente"; fi)"
+echo "   - DNS usado: <service>.<namespace>.svc.cluster.local (padrão do Kubernetes)"
 echo ""
-echo "💡 Para mais detalhes, verifique:"
-echo "   - kubectl describe serviceexport <nome> -n mcs-demo --context=<contexto>"
-echo "   - kubectl get serviceimport -n mcs-demo --context=<contexto>"
+echo "💡 Com o Cloud Service Mesh, a descoberta de serviços é automática!"
+echo "   Não é necessário configurar ServiceEntry, ServiceExport ou VirtualService."

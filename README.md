@@ -186,7 +186,123 @@ gcloud container fleet memberships list --project=infra-474223
 - ✅ O ASM é provisionado automaticamente via Terraform
 - ✅ Ambos os clusters compartilham a mesma malha de serviços
 - ✅ mTLS é habilitado automaticamente para comunicação segura entre clusters
-- ℹ️ Exemplos de uso estão disponíveis em `mcs-demo/` (não fazem parte do provisionamento)
+- ✅ **Descoberta automática de serviços**: Com clusters na mesma VPC, Fleet e ASM com gerenciamento automático, a descoberta de serviços entre clusters funciona automaticamente
+- ℹ️ Exemplos de uso e testes estão disponíveis em `app-demo/` (não fazem parte do provisionamento)
+
+## 🧪 Testes e Validação da Arquitetura
+
+Após o provisionamento da infraestrutura, você pode validar que tudo está funcionando corretamente usando os exemplos e scripts de teste disponíveis em `app-demo/`.
+
+### Arquitetura de Testes
+
+A estrutura de testes demonstra a comunicação multi-cluster usando o **Cloud Service Mesh** com descoberta automática:
+
+```
+app-demo/
+├── README.md                    # Documentação completa dos testes
+├── scripts/
+│   ├── deploy.sh                # Deploy automatizado das aplicações de teste
+│   ├── test-communication.sh    # Teste de comunicação entre clusters
+│   └── check-pods.sh            # Verificação de status dos pods
+├── app-engine/                  # Aplicação de teste no cluster app-engine
+│   ├── namespace.yaml
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   └── kustomization.yaml
+└── master-engine/               # Aplicação de teste no cluster master-engine
+    ├── namespace.yaml
+    ├── deployment.yaml
+    ├── service.yaml
+    └── kustomization.yaml
+```
+
+### Fluxo de Testes Recomendado
+
+#### 1. Verificar Infraestrutura Provisionada
+
+```bash
+# Verificar clusters criados
+gcloud container clusters list --project=infra-474223
+
+# Verificar status do ASM
+gcloud container hub features describe servicemesh --project=infra-474223 --location=global
+
+# Verificar clusters no Fleet
+gcloud container fleet memberships list --project=infra-474223
+
+# Verificar que os clusters estão na mesma VPC
+gcloud container clusters describe master-engine --location=us-central1-a --project=infra-474223 --format="value(network)"
+gcloud container clusters describe app-engine --location=us-east1-b --project=infra-474223 --format="value(network)"
+```
+
+#### 2. Conectar aos Clusters
+
+```bash
+# Conectar ao cluster master-engine
+gcloud container clusters get-credentials master-engine \
+  --location=us-central1-a \
+  --project=infra-474223
+
+# Conectar ao cluster app-engine
+gcloud container clusters get-credentials app-engine \
+  --location=us-east1-b \
+  --project=infra-474223
+```
+
+#### 3. Deploy das Aplicações de Teste
+
+```bash
+cd app-demo
+
+# Deploy automatizado (recomendado)
+./scripts/deploy.sh
+
+# Ou deploy manual
+cd app-engine
+kubectl apply -k . --context=gke_infra-474223_us-east1-b_app-engine
+
+cd ../master-engine
+kubectl apply -k . --context=gke_infra-474223_us-central1-a_master-engine
+```
+
+#### 4. Validar Comunicação Multi-cluster
+
+```bash
+# Teste automatizado de comunicação
+./scripts/test-communication.sh
+
+# Ou teste manual
+# De app-engine para master-engine
+kubectl run test-pod --image=curlimages/curl:latest --rm -it --restart=Never -n mcs-demo \
+  --context=gke_infra-474223_us-east1-b_app-engine \
+  --overrides='{"metadata":{"annotations":{"sidecar.istio.io/inject":"true"}}}' \
+  -- curl http://hello-master-engine.mcs-demo.svc.cluster.local
+
+# De master-engine para app-engine
+kubectl run test-pod --image=curlimages/curl:latest --rm -it --restart=Never -n mcs-demo \
+  --context=gke_infra-474223_us-central1-a_master-engine \
+  --overrides='{"metadata":{"annotations":{"sidecar.istio.io/inject":"true"}}}' \
+  -- curl http://hello-app-engine.mcs-demo.svc.cluster.local
+```
+
+### O que os Testes Validam
+
+1. ✅ **Descoberta Automática de Serviços**: Serviços em um cluster são automaticamente descobertos por pods em outro cluster
+2. ✅ **Comunicação Cross-cluster**: Pods podem se comunicar usando DNS padrão do Kubernetes (`svc.cluster.local`)
+3. ✅ **Injeção Automática do Sidecar**: O Istio sidecar (`istio-proxy`) é injetado automaticamente nos pods
+4. ✅ **mTLS Automático**: Comunicação entre clusters é criptografada automaticamente via mTLS
+5. ✅ **Roteamento Transparente**: O Cloud Service Mesh roteia automaticamente o tráfego para o cluster correto
+
+### Características da Arquitetura de Testes
+
+- **Simplicidade**: Apenas Deployment e Service Kubernetes padrão (sem ServiceEntry, ServiceExport ou VirtualService)
+- **Descoberta Automática**: O Cloud Service Mesh gerencia tudo automaticamente
+- **DNS Padrão**: Usa o DNS padrão do Kubernetes (`<service>.<namespace>.svc.cluster.local`)
+- **Multi-cluster Transparente**: Aplicações não precisam saber em qual cluster estão rodando
+
+### Documentação Detalhada
+
+Para mais detalhes sobre os testes, consulte: **[app-demo/README.md](./app-demo/README.md)**
 
 ## 🌐 Multi-cluster Ingress
 

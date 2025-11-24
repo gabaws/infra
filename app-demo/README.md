@@ -1,38 +1,35 @@
-# Demo Multi-cluster Services (MCS)
+# Demo Cloud Service Mesh - Comunicação Multi-cluster
 
-Demonstração de comunicação entre serviços em diferentes clusters GKE usando Multi-cluster Services.
+Demonstração de comunicação entre serviços em diferentes clusters GKE usando **Cloud Service Mesh (Anthos Service Mesh gerenciado)** com descoberta automática de serviços.
+
+## 🎯 Como Funciona
+
+Com o **Cloud Service Mesh** configurado com gerenciamento automático, a descoberta de serviços e endpoints entre clusters funciona **automaticamente** quando:
+
+1. ✅ Clusters na mesma VPC
+2. ✅ Clusters na mesma Fleet (GKE Hub)
+3. ✅ Anthos Service Mesh habilitado com `MANAGEMENT_AUTOMATIC`
+
+**Não é necessário** configurar ServiceEntry, ServiceExport, VirtualService ou DestinationRule manualmente. O Cloud Service Mesh gerencia tudo automaticamente!
 
 ## 📋 Estrutura
 
 ```
-mcs-demo/
+app-demo/
 ├── README.md
-├── docs/
-│   ├── Arquitetura.md              # Documentação da arquitetura MCS + ASM
-│   └── teste_sem_mcs.md            # Guia para teste sem MCS (ASM-only)
 ├── scripts/
 │   ├── deploy.sh                    # Script de deploy automatizado
 │   ├── test-communication.sh        # Script de teste de comunicação
-│   ├── test-asm-multicluster-only.sh # Script de teste sem MCS
-│   ├── setup-asm-multicluster-only.sh # Script de setup sem MCS
-│   ├── fix-node-pool-scaling.sh     # Script para corrigir scaling de nodes
-│   ├── force-rollout.sh            # Script para forçar rollout
-│   └── check-pods.sh               # Script para verificar pods em ambos clusters
+│   └── check-pods.sh                # Script para verificar pods em ambos clusters
 ├── app-engine/                      # Aplicação no cluster app-engine
 │   ├── namespace.yaml
 │   ├── deployment.yaml
 │   ├── service.yaml
-│   ├── service-export.yaml
-│   ├── serviceentry-master.yaml    # ServiceEntry para comunicação sem MCS
-│   ├── virtualservice-master.yaml  # VirtualService para comunicação sem MCS
 │   └── kustomization.yaml
 └── master-engine/                   # Aplicação no cluster master-engine
     ├── namespace.yaml
     ├── deployment.yaml
     ├── service.yaml
-    ├── service-export.yaml
-    ├── serviceentry-app.yaml       # ServiceEntry para comunicação sem MCS
-    ├── virtualservice-app.yaml     # VirtualService para comunicação sem MCS
     └── kustomization.yaml
 ```
 
@@ -40,10 +37,12 @@ mcs-demo/
 
 ### Pré-requisitos
 
-1. Multi-cluster Services habilitado no Fleet
-2. Clusters registrados no Fleet
-3. ASM (Anthos Service Mesh) habilitado
-4. `kubectl` e `gcloud` configurados
+1. ✅ Clusters GKE criados na mesma VPC
+2. ✅ Clusters registrados no Fleet (GKE Hub)
+3. ✅ Anthos Service Mesh habilitado com gerenciamento automático
+4. ✅ `kubectl` e `gcloud` configurados
+
+**Nota**: Se você usou o Terraform deste projeto, todos os pré-requisitos já estão configurados!
 
 ### Deploy Automatizado
 
@@ -53,8 +52,9 @@ mcs-demo/
 
 O script irá:
 - Conectar aos clusters
-- Fazer deploy das aplicações
-- Verificar status dos pods e ServiceExports
+- Criar o namespace com label para injeção automática do Istio
+- Fazer deploy das aplicações (Deployment + Service)
+- Verificar status dos pods
 - Executar testes de comunicação
 
 ### Deploy Manual
@@ -71,33 +71,13 @@ kubectl apply -k . --context=gke_infra-474223_us-central1-a_master-engine
 
 ## 🧪 Testes
 
-### Teste com MCS (Recomendado)
-
-Teste de comunicação usando Multi-cluster Services (MCS):
+### Teste Automatizado
 
 ```bash
 ./scripts/test-communication.sh
 ```
 
 O script verifica automaticamente se os pods estão prontos antes de executar os testes de comunicação.
-
-### Teste sem MCS (ASM-only)
-
-Teste de comunicação usando apenas ASM Multi-cluster (ServiceEntry + VirtualService), **sem MCS**:
-
-```bash
-# 1. Configurar ServiceEntry e VirtualService
-./scripts/setup-asm-multicluster-only.sh
-
-# 2. Testar comunicação
-./scripts/test-asm-multicluster-only.sh
-```
-
-**Diferenças:**
-- **Com MCS**: Usa `service.namespace.svc.clusterset.local` (automático)
-- **Sem MCS**: Usa `service-remote.namespace.svc.cluster.local` (manual)
-
-Veja [docs/teste_sem_mcs.md](./docs/teste_sem_mcs.md) para mais detalhes.
 
 ### Teste Manual
 
@@ -106,14 +86,30 @@ Veja [docs/teste_sem_mcs.md](./docs/teste_sem_mcs.md) para mais detalhes.
 kubectl run test-pod --image=curlimages/curl:latest --rm -it --restart=Never -n mcs-demo \
   --context=gke_infra-474223_us-east1-b_app-engine \
   --overrides='{"metadata":{"annotations":{"sidecar.istio.io/inject":"true"}}}' \
-  -- curl http://hello-master-engine.mcs-demo.svc.clusterset.local
+  -- curl http://hello-master-engine.mcs-demo.svc.cluster.local
 
 # De master-engine para app-engine
 kubectl run test-pod --image=curlimages/curl:latest --rm -it --restart=Never -n mcs-demo \
   --context=gke_infra-474223_us-central1-a_master-engine \
   --overrides='{"metadata":{"annotations":{"sidecar.istio.io/inject":"true"}}}' \
-  -- curl http://hello-app-engine.mcs-demo.svc.clusterset.local
+  -- curl http://hello-app-engine.mcs-demo.svc.cluster.local
 ```
+
+## 📝 Formato DNS
+
+Com o Cloud Service Mesh, você usa o **DNS padrão do Kubernetes**:
+
+```
+<service-name>.<namespace>.svc.cluster.local
+```
+
+Exemplos:
+- `hello-app-engine.mcs-demo.svc.cluster.local`
+- `hello-master-engine.mcs-demo.svc.cluster.local`
+
+**Nota**: Se estiver no mesmo namespace, pode usar apenas o nome do serviço:
+- `hello-app-engine`
+- `hello-master-engine`
 
 ## ✅ Verificação
 
@@ -128,52 +124,29 @@ kubectl get pods -n mcs-demo --context=gke_infra-474223_us-central1-a_master-eng
 ./scripts/check-pods.sh
 ```
 
+### Verificar Serviços
+
+```bash
+kubectl get svc -n mcs-demo --context=gke_infra-474223_us-east1-b_app-engine
+kubectl get svc -n mcs-demo --context=gke_infra-474223_us-central1-a_master-engine
+```
+
+### Verificar Injeção do Sidecar
+
+```bash
+# Verificar containers no pod (deve mostrar: hello-server istio-proxy)
+kubectl get pod <pod-name> -n mcs-demo --context=<contexto> -o jsonpath='{.spec.containers[*].name}'
+```
+
 ### Acessar Pods para Debug
 
-**⚠️ Motivo do problema**: Os pods têm 2 containers (`hello-server` e `istio-proxy`). Sem especificar o container com `-c`, o kubectl não sabe em qual container executar e o comando trava.
-
-**Comandos corretos:**
-
 ```bash
-# 1. Especificar o container com -c e usar -it (interactive + tty)
-kubectl exec -n mcs-demo -it <pod-name> --context=gke_infra-474223_us-east1-b_app-engine -c hello-server -- /bin/bash
-
-# 2. Se bash não funcionar, usar sh
+# Especificar o container com -c
 kubectl exec -n mcs-demo -it <pod-name> --context=gke_infra-474223_us-east1-b_app-engine -c hello-server -- /bin/sh
 
-# 3. Para acessar o sidecar istio-proxy (se necessário)
+# Para acessar o sidecar istio-proxy (se necessário)
 kubectl exec -n mcs-demo -it <pod-name> --context=gke_infra-474223_us-east1-b_app-engine -c istio-proxy -- /bin/sh
-
-# Verificar containers no pod
-kubectl get pod <pod-name> -n mcs-demo --context=<contexto> -o jsonpath='{.spec.containers[*].name}'
-# Deve mostrar: hello-server istio-proxy
 ```
-
-### Verificar ServiceExports
-
-```bash
-kubectl get serviceexport -n mcs-demo --context=gke_infra-474223_us-east1-b_app-engine
-kubectl get serviceexport -n mcs-demo --context=gke_infra-474223_us-central1-a_master-engine
-```
-
-### Verificar Serviços Importados (gke-mcs-*)
-
-```bash
-kubectl get svc -n mcs-demo --context=gke_infra-474223_us-east1-b_app-engine | grep gke-mcs
-kubectl get svc -n mcs-demo --context=gke_infra-474223_us-central1-a_master-engine | grep gke-mcs
-```
-
-## 📝 Formato DNS Multi-cluster
-
-Os serviços expostos via ServiceExport podem ser acessados usando:
-
-```
-<service-name>.<namespace>.svc.clusterset.local
-```
-
-Exemplos:
-- `hello-app-engine.mcs-demo.svc.clusterset.local`
-- `hello-master-engine.mcs-demo.svc.clusterset.local`
 
 ## 🔍 Troubleshooting
 
@@ -198,50 +171,19 @@ kubectl describe node <node-name> --context=<contexto> | grep -A 5 Taints
 kubectl get pod <pod-name> -n mcs-demo --context=<contexto> -o jsonpath='{.spec.containers[*].resources}'
 ```
 
-### Resolvendo Problemas de CPU Insuficiente
-
-Se o diagnóstico mostrar "Insufficient cpu" e "max node group size reached", você tem duas opções:
-
-#### Opção 1: Aumentar o max_node_count (Recomendado)
-
-Execute o script para aumentar o limite de nós:
+### Verificar Status do Service Mesh
 
 ```bash
-./scripts/fix-node-pool-scaling.sh
+# Verificar status da feature do ASM
+gcloud container hub features describe servicemesh --project=infra-474223 --location=global
+
+# Listar clusters no Fleet
+gcloud container fleet memberships list --project=infra-474223
+
+# Verificar se os clusters estão na mesma VPC
+gcloud container clusters describe master-engine --location=us-central1-a --project=infra-474223 --format="value(network)"
+gcloud container clusters describe app-engine --location=us-east1-b --project=infra-474223 --format="value(network)"
 ```
-
-Este script aumenta o `max_node_count` de 2 para 4 em ambos os clusters, permitindo que o cluster-autoscaler adicione mais nós quando necessário.
-
-#### Opção 2: Atualizar via Terraform
-
-Edite o arquivo `terraform.tfvars` e aumente o `max_node_count`:
-
-```hcl
-gke_clusters = {
-  master-engine = {
-    # ... outras configurações ...
-    max_node_count = 4  # Aumentar de 2 para 4
-  }
-  app-engine = {
-    # ... outras configurações ...
-    max_node_count = 4  # Aumentar de 2 para 4
-  }
-}
-```
-
-Depois execute:
-
-```bash
-terraform apply
-```
-
-#### Opção 3: Reduzir Recursos dos Pods
-
-Os deployments já foram configurados com recursos reduzidos:
-- Container principal: 50m CPU / 64Mi memória (requests)
-- Sidecar Istio: 100m CPU / 128Mi memória (via annotations)
-
-Se ainda houver problemas, você pode reduzir ainda mais os recursos nos arquivos `deployment.yaml`.
 
 ### Verificações Rápidas
 
@@ -249,39 +191,70 @@ Se ainda houver problemas, você pode reduzir ainda mais os recursos nos arquivo
 # Verificar pods em ambos os clusters
 ./scripts/check-pods.sh
 
-# Verificar status do ServiceExport
-kubectl describe serviceexport hello-app-engine -n mcs-demo --context=gke_infra-474223_us-east1-b_app-engine
-kubectl describe serviceexport hello-master-engine -n mcs-demo --context=gke_infra-474223_us-central1-a_master-engine
-
-# Verificar ServiceImports (criados automaticamente)
-kubectl get serviceimport -n mcs-demo --context=gke_infra-474223_us-east1-b_app-engine
-kubectl get serviceimport -n mcs-demo --context=gke_infra-474223_us-central1-a_master-engine
-
 # Verificar sidecar injection
 kubectl get pod <pod-name> -n mcs-demo --context=<contexto> -o jsonpath='{.spec.containers[*].name}'
 # Deve mostrar: hello-server istio-proxy
 
-# Acessar pod para testes (usar contexto correto)
-kubectl exec -n mcs-demo -it <pod-name> --context=gke_infra-474223_us-east1-b_app-engine -- /bin/bash
-kubectl exec -n mcs-demo -it <pod-name> --context=gke_infra-474223_us-central1-a_master-engine -- /bin/bash
+# Testar DNS dentro do pod
+kubectl exec -n mcs-demo -it <pod-name> --context=<contexto> -c hello-server -- \
+  nslookup hello-master-engine.mcs-demo.svc.cluster.local
 
-# Verificar eventos de um pod pendente
-kubectl describe pod <pod-name> -n mcs-demo --context=<contexto>
-
-# Verificar todos os eventos do namespace
+# Verificar eventos do namespace
 kubectl get events -n mcs-demo --context=<contexto> --sort-by='.lastTimestamp'
 ```
 
+### Problemas Comuns
+
+#### 1. Pods não conseguem se comunicar
+
+**Verificar:**
+- ✅ Sidecar Istio está injetado? (`istio-proxy` container presente)
+- ✅ Namespace tem label `istio-injection: enabled`?
+- ✅ Serviços estão criados em ambos os clusters?
+- ✅ Aguardou alguns minutos após criar os serviços? (propagação da descoberta)
+
+#### 2. Sidecar não está sendo injetado
+
+**Solução:**
+- Verificar se o namespace tem a label: `istio-injection: enabled`
+- Ou adicionar annotation no pod: `sidecar.istio.io/inject: "true"`
+
+#### 3. DNS não resolve
+
+**Verificar:**
+- ✅ Serviços estão criados?
+- ✅ Pods estão rodando?
+- ✅ Aguardou alguns minutos para propagação?
+
 ## 📚 Documentação
-
-### Documentação do Projeto
-
-- [Arquitetura MCS + ASM](./docs/Arquitetura.md) - Documentação completa da arquitetura, componentes e fluxos
-- [Teste sem MCS (ASM-only)](./docs/teste_sem_mcs.md) - Guia para comunicação multi-cluster usando apenas ASM
 
 ### Referências Externas
 
-- [Multi-cluster Services Documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/multi-cluster-services)
+- [Cloud Service Mesh - Descoberta Automática](https://istio.io/v1.27/docs/ops/deployment/deployment-models/#endpoint-discovery-with-multiple-control-planes)
+- [Anthos Service Mesh - Provisionamento](https://docs.cloud.google.com/service-mesh/docs/onboarding/provision-control-plane?hl=pt-br)
 - [Anthos Service Mesh Multi-cluster](https://cloud.google.com/service-mesh/docs/multicluster-setup)
 - [Istio Architecture](https://istio.io/latest/docs/ops/deployment/architecture/)
 - [Kubernetes Services](https://kubernetes.io/docs/concepts/services-networking/service/)
+
+## 🎓 Conceitos Importantes
+
+### Descoberta Automática de Serviços
+
+Com o Cloud Service Mesh gerenciado, o Istio automaticamente:
+- Descobre serviços em todos os clusters da mesma Fleet
+- Propaga endpoints entre clusters
+- Configura roteamento e balanceamento de carga
+- Habilita mTLS automaticamente para comunicação segura
+
+### Requisitos para Comunicação Multi-cluster
+
+1. **Mesma VPC**: Clusters devem estar na mesma rede VPC
+2. **Mesma Fleet**: Clusters devem estar registrados no mesmo GKE Hub Fleet
+3. **ASM Habilitado**: Anthos Service Mesh com gerenciamento automático
+4. **Sidecar Injetado**: Pods devem ter o sidecar `istio-proxy` injetado
+
+### DNS e Descoberta
+
+- Use o DNS padrão do Kubernetes: `<service>.<namespace>.svc.cluster.local`
+- O Cloud Service Mesh automaticamente roteia para o cluster correto
+- Não é necessário configurar ServiceEntry ou ServiceExport

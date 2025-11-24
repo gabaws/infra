@@ -73,20 +73,13 @@ echo "Cluster $MASTER_ENGINE_CLUSTER:"
 kubectl get pods -n mcs-demo --context=$MASTER_ENGINE_CTX
 
 echo ""
-echo "📊 Status dos ServiceExports:"
-echo ""
-echo "Cluster $APP_ENGINE_CLUSTER:"
-kubectl get serviceexport -n mcs-demo --context=$APP_ENGINE_CTX
-
-echo ""
-echo "Cluster $MASTER_ENGINE_CLUSTER:"
-kubectl get serviceexport -n mcs-demo --context=$MASTER_ENGINE_CTX
-
-echo ""
 echo "✅ Deploy concluído!"
 echo ""
-echo "⏳ Aguarde alguns minutos para a propagação dos serviços entre clusters."
+echo "⏳ Aguarde alguns minutos para a propagação da descoberta de serviços entre clusters."
 echo ""
 echo "🧪 Para testar a comunicação entre clusters, execute:"
 echo "   ./scripts/test-communication.sh"
+echo ""
+echo "💡 Com o Cloud Service Mesh, a descoberta de serviços é automática!"
+echo "   Use o DNS padrão: <service>.<namespace>.svc.cluster.local"
 echo ""

@@ -5,6 +5,3 @@ resources:
   - namespace.yaml
   - deployment.yaml
   - service.yaml
-  - serviceentry-app.yaml
-  - destinationrule-app.yaml
-  - virtualservice-app.yaml
