@@ -54,8 +54,10 @@ Configure esses nameservers no seu provedor de domínio (GoDaddy, etc.).
 - **Cloud DNS**: Zona pública para `cloudab.online`
 - **Certificate Manager**: Certificado wildcard `*.cloudab.online`
 
-### O que NÃO é Provisionado
-- **Multi-cluster Services (MCS)**: Deve ser habilitado manualmente (veja seção [MCS](#-multi-cluster-services-mcs))
+### O que é Provisionado (Fleet e ASM)
+- **GKE Hub Fleet**: Os clusters são automaticamente registrados no Fleet
+- **Anthos Service Mesh (ASM)**: Habilitado automaticamente em todos os clusters com gerenciamento automático
+- Os clusters compartilham a mesma malha de serviços (mesh) para comunicação segura entre clusters
 
 
 ## 🔧 Variáveis Principais
@@ -152,108 +154,39 @@ Error: googleapi: Error 409: Already exists: projects/.../clusters/...
 
 **Prevenção**: Os timeouts foram configurados no módulo GKE para garantir que a destruição seja completa. Se o problema persistir, aguarde pelo menos 10 minutos após a destruição antes de tentar recriar.
 
-## 🔗 Multi-cluster Services (MCS)
+## 🔗 Anthos Service Mesh (ASM)
 
-O **Multi-cluster Services (MCS)** é uma feature do projeto que permite comunicação transparente entre serviços em diferentes clusters GKE usando descoberta automática de endpoints e balanceamento de carga gerenciado pelo Google Cloud.
+O projeto provisiona automaticamente:
 
-**⚠️ Importante**: O MCS **não é suportado pelo Terraform** e deve ser habilitado manualmente via `gcloud` após o provisionamento da infraestrutura.
+1. **Registro no Fleet**: Ambos os clusters são registrados automaticamente no GKE Hub Fleet
+2. **Anthos Service Mesh**: A feature do ASM é habilitada no Fleet e configurada com gerenciamento automático
+3. **Feature Membership**: Cada cluster é registrado na feature do ASM para compartilhar a mesma malha de serviços
 
-### O que é MCS?
+### Como Funciona
 
-MCS permite que serviços em clusters diferentes se comuniquem como se estivessem no mesmo cluster, usando:
-- **ServiceExport**: Marca um Service para exportação multi-cluster
-- **ServiceImport**: Criado automaticamente nos clusters remotos
-- **DNS Multi-cluster**: Resolução via `*.svc.clusterset.local`
-- **Traffic Director**: Balanceamento de carga global entre clusters
+- Os clusters `master-engine` e `app-engine` fazem parte da mesma **malha de serviços (mesh)**
+- Comunicação entre clusters é feita através do ASM com mTLS automático
+- O gerenciamento é automático (`MANAGEMENT_AUTOMATIC`), então o ASM é instalado e mantido automaticamente pelo Google Cloud
 
-### Pré-requisitos
-
-Antes de habilitar o MCS, certifique-se de que:
-1. ✅ Os clusters GKE foram provisionados via Terraform
-2. ✅ Os clusters estão registrados no **GKE Hub Fleet** (feito automaticamente pelo Terraform)
-3. ✅ O **Anthos Service Mesh (ASM)** está habilitado nos clusters
-4. ✅ Você tem permissões para gerenciar features do Fleet (`gkehub.features.*`)
-
-### Habilitar MCS
-
-Siga a [documentação oficial do Google Cloud](https://cloud.google.com/kubernetes-engine/docs/how-to/multi-cluster-services?hl=pt-br) para habilitar o MCS. Abaixo está um resumo dos passos:
-
-#### 1. Obter Membership IDs dos clusters
+### Verificar Status do ASM
 
 ```bash
-PROJECT_ID="infra-474223"
+# Verificar status da feature do ASM
+gcloud container hub features describe servicemesh --project=infra-474223 --location=global
 
-# Listar memberships dos clusters
-gcloud container fleet memberships list --project=$PROJECT_ID
+# Verificar memberships dos clusters
+terraform output anthos_service_mesh_status
 
-# Ou obter via Terraform output (se disponível)
-terraform output -json | jq '.anthos_service_mesh_status.value.membership_ids'
+# Listar clusters no Fleet
+gcloud container fleet memberships list --project=infra-474223
 ```
-
-#### 2. Habilitar a feature MCS
-
-```bash
-# Habilitar Multi-cluster Services no Fleet
-gcloud container fleet multi-cluster-services enable --project=$PROJECT_ID
-```
-
-#### 3. Configurar o Config Cluster
-
-Escolha um cluster para ser o **config cluster** (geralmente o primeiro cluster):
-
-```bash
-# Substitua <MEMBERSHIP_ID> pelo ID do membership do cluster escolhido
-CONFIG_MEMBERSHIP="projects/$PROJECT_ID/locations/global/memberships/<MEMBERSHIP_ID>"
-
-# Configurar o config_membership
-gcloud container fleet multi-cluster-services update \
-  --config-membership=$CONFIG_MEMBERSHIP \
-  --project=$PROJECT_ID
-```
-
-#### 4. Registrar todos os clusters
-
-```bash
-# Obter todos os membership IDs (separados por vírgula)
-MEMBERSHIPS="projects/$PROJECT_ID/locations/global/memberships/<MEMBERSHIP_1>,projects/$PROJECT_ID/locations/global/memberships/<MEMBERSHIP_2>"
-
-# Registrar todos os clusters no MCS
-gcloud container fleet multi-cluster-services update \
-  --config-membership=$CONFIG_MEMBERSHIP \
-  --memberships=$MEMBERSHIPS \
-  --project=$PROJECT_ID
-```
-
-#### 5. Verificar status
-
-```bash
-# Verificar se o MCS está configurado
-gcloud container fleet multi-cluster-services describe --project=$PROJECT_ID
-
-# Verificar memberships registrados
-gcloud container fleet memberships list --project=$PROJECT_ID
-```
-
-### Usar MCS
-
-Após habilitar o MCS, você pode:
-
-1. **Exportar serviços** usando `ServiceExport` (veja exemplo em `mcs-demo/`)
-2. **Acessar serviços remotos** via DNS `service.namespace.svc.clusterset.local`
-3. **Testar comunicação** entre clusters usando os scripts em `mcs-demo/scripts/`
-
-### Documentação
-
-- **Demo e Exemplos**: Veja [mcs-demo/README.md](./mcs-demo/README.md) para demonstração completa
-- **Arquitetura**: Consulte [mcs-demo/docs/Arquitetura.md](./mcs-demo/docs/Arquitetura.md) para documentação detalhada da arquitetura
-- **Referência Oficial**: [Multi-cluster Services Documentation (PT-BR)](https://cloud.google.com/kubernetes-engine/docs/how-to/multi-cluster-services?hl=pt-br)
 
 ### Notas Importantes
 
-- ⚠️ O MCS **não é suportado pelo Terraform** e deve ser habilitado manualmente
-- O MCS funciona em conjunto com o **Anthos Service Mesh (ASM)** para comunicação segura entre clusters
-- Todos os clusters devem estar registrados no mesmo **GKE Hub Fleet**
-- Após habilitar o MCS, pode levar alguns minutos para a propagação completa
+- ✅ O ASM é provisionado automaticamente via Terraform
+- ✅ Ambos os clusters compartilham a mesma malha de serviços
+- ✅ mTLS é habilitado automaticamente para comunicação segura entre clusters
+- ℹ️ Exemplos de uso estão disponíveis em `mcs-demo/` (não fazem parte do provisionamento)
 
 ## 🌐 Multi-cluster Ingress
 

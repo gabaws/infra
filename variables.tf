@@ -109,8 +109,8 @@ variable "gke_clusters" {
     master-engine = {
       region                     = "us-central1"
       zone                       = "us-central1-a"
-      initial_node_count         = 1
-      min_node_count             = 1
+      initial_node_count         = 0
+      min_node_count             = 0
       max_node_count             = 6
       machine_type               = "e2-medium"
       disk_size_gb               = 50
@@ -121,8 +121,8 @@ variable "gke_clusters" {
     app-engine = {
       region                     = "us-east1"
       zone                       = "us-east1-b"
-      initial_node_count         = 1
-      min_node_count             = 1
+      initial_node_count         = 0
+      min_node_count             = 0
       max_node_count             = 6
       machine_type               = "e2-medium"
       disk_size_gb               = 50

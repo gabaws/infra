@@ -11,23 +11,8 @@ terraform {
   }
 }
 
-# Enable Mesh API
-resource "google_project_service" "mesh_api" {
-  project = var.project_id
-  service = "mesh.googleapis.com"
-
-  disable_on_destroy = false
-}
-
-# Enable GKE Hub API
-resource "google_project_service" "gkehub_api" {
-  project = var.project_id
-  service = "gkehub.googleapis.com"
-
-  disable_on_destroy = false
-}
-
 # GKE Hub Membership for each cluster
+# As APIs mesh.googleapis.com e gkehub.googleapis.com já são habilitadas no main.tf
 resource "google_gke_hub_membership" "memberships" {
   for_each = var.clusters
 
@@ -40,11 +25,6 @@ resource "google_gke_hub_membership" "memberships" {
       resource_link = "//container.googleapis.com/projects/${var.project_id}/locations/${each.value.location}/clusters/${each.value.name}"
     }
   }
-
-  depends_on = [
-    google_project_service.gkehub_api,
-    google_project_service.mesh_api
-  ]
 }
 
 # Feature for Anthos Service Mesh
@@ -54,13 +34,40 @@ resource "google_gke_hub_feature" "mesh" {
   project  = var.project_id
 
   depends_on = [
-    google_project_service.mesh_api,
-    google_project_service.gkehub_api,
     google_gke_hub_membership.memberships
+  ]
+
+  lifecycle {
+    # Garante que os feature memberships sejam deletados antes do feature
+    create_before_destroy = false
+  }
+}
+
+# Null resource para forçar deleção do feature mesh via gcloud
+# Este recurso depende do feature, então será destruído ANTES do feature durante a destruição
+# Executando o comando gcloud durante sua destruição para limpar recursos associados
+resource "null_resource" "force_delete_mesh_feature" {
+  triggers = {
+    project_id = var.project_id
+    location   = "global"
+    # Recria quando os clusters mudam
+    clusters = join(",", [for k, v in var.clusters : "${k}:${v.name}"])
+    # Inclui o ID do feature para forçar recriação quando necessário
+    feature_id = google_gke_hub_feature.mesh.id
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "gcloud container hub features delete servicemesh --project=${self.triggers.project_id} --location=${self.triggers.location} --force --quiet || true"
+  }
+
+  depends_on = [
+    google_gke_hub_feature.mesh
   ]
 }
 
 # Feature Membership for each cluster
+# Registra cada cluster no Anthos Service Mesh com gerenciamento automático
 resource "google_gke_hub_feature_membership" "mesh_feature_membership" {
   for_each = var.clusters
 
@@ -77,20 +84,11 @@ resource "google_gke_hub_feature_membership" "mesh_feature_membership" {
     google_gke_hub_feature.mesh,
     google_gke_hub_membership.memberships
   ]
+
+  lifecycle {
+    # Garante que os memberships sejam deletados antes do feature
+    create_before_destroy = false
+  }
 }
 
-# Multi-cluster Services (MCS) Feature
-# Habilita o Multi-cluster Services para permitir ServiceExport/ServiceImport entre clusters
-# NOTA: O Terraform não suporta completamente a configuração do MCS via feature_membership.
-# A feature é habilitada aqui, mas a configuração do config_membership deve ser feita manualmente via gcloud.
-resource "google_gke_hub_feature" "multiclusterservicediscovery" {
-  name     = "multiclusterservicediscovery"
-  location = "global"
-  project  = var.project_id
-
-  depends_on = [
-    google_project_service.gkehub_api,
-    google_gke_hub_membership.memberships
-  ]
-}
 

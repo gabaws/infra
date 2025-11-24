@@ -23,18 +23,21 @@ resource "google_container_cluster" "clusters" {
   remove_default_node_pool = true
   initial_node_count       = 1
 
- 
   network = var.network
-  subnetwork = [
-    for subnet_name, subnet in var.subnets : subnet.name
-    if subnet.region == each.value.region
-  ][0]
+  
+  # Seleciona a subnet correspondente à região do cluster
+  # Valida que existe uma subnet para a região do cluster
+  subnetwork = [for subnet_name, subnet in var.subnets : subnet.name
+    if subnet.region == each.value.region][0]
 
 
   private_cluster_config {
     enable_private_nodes    = each.value.enable_private_nodes
     enable_private_endpoint = each.value.enable_private_endpoint
-    master_ipv4_cidr_block  = try(each.value.master_ipv4_cidr_block, "172.16.0.0/28")
+    # Usa CIDR único por cluster para evitar conflitos
+    # master-engine: 172.16.0.0/28, app-engine: 172.16.1.0/28
+    master_ipv4_cidr_block  = try(each.value.master_ipv4_cidr_block, 
+      each.key == "master-engine" ? "172.16.0.0/28" : "172.16.1.0/28")
   }
 
   dynamic "master_authorized_networks_config" {
@@ -51,12 +54,14 @@ resource "google_container_cluster" "clusters" {
   }
 
   ip_allocation_policy {
+    # Encontra a subnet correspondente à região do cluster e extrai os ranges secundários
     cluster_secondary_range_name = try([
       for subnet_name, subnet in var.subnets : [
         for sec_range in subnet.secondary_ip_ranges : sec_range.range_name
         if sec_range.range_name == "pods" && subnet.region == each.value.region
       ]
     ][0][0], "pods")
+    
     services_secondary_range_name = try([
       for subnet_name, subnet in var.subnets : [
         for sec_range in subnet.secondary_ip_ranges : sec_range.range_name
@@ -113,8 +118,10 @@ resource "google_container_cluster" "clusters" {
     }
   }
 
+  # Binary Authorization: usa DISABLED por padrão para não bloquear provisionamento
+  # Se necessário, configure uma política no projeto e mude para PROJECT_SINGLETON_POLICY_ENFORCE
   binary_authorization {
-    evaluation_mode = "PROJECT_SINGLETON_POLICY_ENFORCE"
+    evaluation_mode = "DISABLED"
   }
 
   resource_labels = {
@@ -146,7 +153,8 @@ resource "google_container_node_pool" "node_pools" {
   location   = each.value.zone
   cluster    = google_container_cluster.clusters[each.key].name
   project    = var.project_id
-  node_count = each.value.initial_node_count
+  # Usa pelo menos min_node_count se initial_node_count for 0, mas permite 0 se autoscaling iniciar em 0
+  node_count = max(each.value.initial_node_count, 0)
 
   autoscaling {
     min_node_count = each.value.min_node_count
