@@ -74,40 +74,93 @@ obter_ca_cert() {
     # Tenta obter o pod istiod usando diferentes métodos
     ISTIOD_POD=$(kubectl get pods -n istio-system --context=$context -l app=istiod -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
     
-    # Se não encontrou, tenta buscar por nome
-    if [ -z "$ISTIOD_POD" ]; then
-        ISTIOD_POD=$(kubectl get pods -n istio-system --context=$context -o jsonpath='{.items[?(@.metadata.name=~"istiod.*")].metadata.name}' 2>/dev/null | awk '{print $1}' || echo "")
-    fi
-    
-    # Se ainda não encontrou, lista todos os pods e filtra
+    # Se não encontrou, tenta buscar por nome no namespace istio-system
     if [ -z "$ISTIOD_POD" ]; then
         ISTIOD_POD=$(kubectl get pods -n istio-system --context=$context -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null | grep -E "^istiod" | head -1 || echo "")
     fi
     
-    # Se ainda não encontrou, tenta por deployment
+    # Se ainda não encontrou, tenta buscar deployment istiod
     if [ -z "$ISTIOD_POD" ]; then
-        ISTIOD_DEPLOY=$(kubectl get deployment -n istio-system --context=$context -o jsonpath='{range .items[?(@.metadata.name=~"istiod.*")]}{.metadata.name}{"\n"}{end}' 2>/dev/null | head -1 || echo "")
+        echo "   🔍 Buscando deployment istiod..." >&2
+        ISTIOD_DEPLOY=$(kubectl get deployment -n istio-system --context=$context -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null | grep -i istiod | head -1 || echo "")
         if [ -n "$ISTIOD_DEPLOY" ]; then
-            ISTIOD_POD=$(kubectl get pods -n istio-system --context=$context -l app=$ISTIOD_DEPLOY -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+            echo "      Deployment encontrado: $ISTIOD_DEPLOY" >&2
+            ISTIOD_POD=$(kubectl get pods -n istio-system --context=$context -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null | grep -i "$ISTIOD_DEPLOY" | head -1 || echo "")
         fi
     fi
     
+    # Se ainda não encontrou, busca em todos os namespaces
     if [ -z "$ISTIOD_POD" ]; then
-        echo "   ❌ ERRO: Pod istiod não encontrado no cluster $cluster_name" >&2
-        echo "   💡 Verificando pods disponíveis em istio-system..." >&2
-        kubectl get pods -n istio-system --context=$context 2>/dev/null | head -5 >&2 || true
+        echo "   🔍 Buscando istiod em todos os namespaces..." >&2
+        ISTIOD_POD=$(kubectl get pods --all-namespaces --context=$context -o jsonpath='{range .items[*]}{.metadata.namespace}{"\t"}{.metadata.name}{"\n"}{end}' 2>/dev/null | grep -i istiod | head -1 | awk '{print $2}' || echo "")
+        if [ -n "$ISTIOD_POD" ]; then
+            ISTIOD_NS=$(kubectl get pods --all-namespaces --context=$context -o jsonpath='{range .items[*]}{.metadata.namespace}{"\t"}{.metadata.name}{"\n"}{end}' 2>/dev/null | grep -i istiod | head -1 | awk '{print $1}' || echo "istio-system")
+            echo "      Pod encontrado: $ISTIOD_POD no namespace $ISTIOD_NS" >&2
+            # Ajusta o namespace para usar no comando posterior
+            if [ "$ISTIOD_NS" != "istio-system" ]; then
+                echo "   ⚠️  Pod istiod encontrado em namespace diferente: $ISTIOD_NS" >&2
+            fi
+        fi
+    fi
+    
+    # Se ainda não encontrou, tenta buscar pelo certificado diretamente em um secret ou configmap existente
+    if [ -z "$ISTIOD_POD" ]; then
+        echo "   ⚠️  Pod istiod não encontrado. Tentando obter certificado de outras fontes..." >&2
+        # Verifica se já existe um ConfigMap com o certificado
+        EXISTING_CM=$(kubectl get configmap -n istio-system --context=$context istio-ca-root-cert -o jsonpath='{.data.root-cert\.pem}' 2>/dev/null || echo "")
+        if [ -n "$EXISTING_CM" ] && [ ${#EXISTING_CM} -gt 100 ]; then
+            echo "   ✅ ConfigMap istio-ca-root-cert já existe, usando o certificado existente" >&2
+            echo "$EXISTING_CM"
+            return 0
+        fi
+        
+        # Verifica se há deployments do istiod (no ASM gerenciado, o istiod pode não aparecer como pod)
+        ISTIOD_DEPLOY=$(kubectl get deployment -n istio-system --context=$context -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null | grep -i istiod | head -1 || echo "")
+        if [ -n "$ISTIOD_DEPLOY" ]; then
+            echo "   ℹ️  Deployment istiod encontrado: $ISTIOD_DEPLOY (mas pod não está rodando)" >&2
+            echo "   ⚠️  No ASM gerenciado, o istiod pode ser gerenciado pelo Google Cloud" >&2
+            echo "   💡 Tentando usar certificado CA do cluster Kubernetes como fallback..." >&2
+        fi
+    fi
+    
+    # Se não encontrou o pod, tenta usar certificado do cluster como fallback
+    if [ -z "$ISTIOD_POD" ]; then
+        echo "   ⚠️  Pod istiod não encontrado. Isso pode ser normal no ASM gerenciado." >&2
+        echo "   💡 Tentando usar certificado CA do cluster Kubernetes como fallback..." >&2
+        
+        # Obtém o certificado CA do cluster como fallback
+        CLUSTER_CA=$(kubectl config view --context=$context --minify -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' 2>/dev/null | base64 -d || echo "")
+        if [ -n "$CLUSTER_CA" ] && [ ${#CLUSTER_CA} -gt 100 ]; then
+            echo "   ✅ Certificado CA do cluster obtido (será usado como fallback)" >&2
+            echo "$CLUSTER_CA"
+            return 0
+        fi
+        
+        # Se ainda não conseguiu, mostra erro detalhado
+        echo "   ❌ ERRO: Não foi possível obter certificado CA" >&2
+        echo "   💡 Verificando pods e deployments disponíveis em istio-system..." >&2
         echo "" >&2
-        echo "   💡 Verifique se o ASM está instalado e os pods estão rodando:" >&2
-        echo "      kubectl get pods -n istio-system --context=$context" >&2
+        echo "   Pods:" >&2
+        kubectl get pods -n istio-system --context=$context 2>/dev/null | head -10 >&2 || true
+        echo "" >&2
+        echo "   Deployments:" >&2
+        kubectl get deployment -n istio-system --context=$context 2>/dev/null | head -10 >&2 || true
+        echo "" >&2
+        echo "   💡 No ASM gerenciado, o istiod pode ser gerenciado pelo Google Cloud" >&2
+        echo "   💡 O certificado CA do cluster Kubernetes será usado como fallback" >&2
         return 1
     fi
     
-    echo "      Pod istiod encontrado: $ISTIOD_POD" >&2
+    # Define o namespace a ser usado (pode ter sido ajustado acima)
+    ISTIOD_NS="${ISTIOD_NS:-istio-system}"
+    
+    echo "      Pod istiod encontrado: $ISTIOD_POD (namespace: $ISTIOD_NS)" >&2
     
     # Tenta obter o certificado de diferentes locais no pod istiod
-    CA_CERT=$(kubectl exec -n istio-system --context=$context $ISTIOD_POD -c discovery -- cat /var/run/secrets/istio/root-cert.pem 2>/dev/null || \
-              kubectl exec -n istio-system --context=$context $ISTIOD_POD -c istio-proxy -- cat /var/run/secrets/istio/root-cert.pem 2>/dev/null || \
-              kubectl exec -n istio-system --context=$context $ISTIOD_POD -- cat /var/run/secrets/istio/root-cert.pem 2>/dev/null || echo "")
+    CA_CERT=$(kubectl exec -n $ISTIOD_NS --context=$context $ISTIOD_POD -c discovery -- cat /var/run/secrets/istio/root-cert.pem 2>/dev/null || \
+              kubectl exec -n $ISTIOD_NS --context=$context $ISTIOD_POD -c istio-proxy -- cat /var/run/secrets/istio/root-cert.pem 2>/dev/null || \
+              kubectl exec -n $ISTIOD_NS --context=$context $ISTIOD_POD -- cat /var/run/secrets/istio/root-cert.pem 2>/dev/null || \
+              kubectl exec -n $ISTIOD_NS --context=$context $ISTIOD_POD -c istiod -- cat /var/run/secrets/istio/root-cert.pem 2>/dev/null || echo "")
     
     if [ -z "$CA_CERT" ]; then
         echo "   ⚠️  Tentando obter certificado de secret..." >&2
