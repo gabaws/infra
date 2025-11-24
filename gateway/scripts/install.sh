@@ -71,11 +71,34 @@ obter_ca_cert() {
     
     echo "   🔍 Obtendo certificado CA do cluster $cluster_name..." >&2
     
-    # Obtém o pod istiod
+    # Tenta obter o pod istiod usando diferentes métodos
     ISTIOD_POD=$(kubectl get pods -n istio-system --context=$context -l app=istiod -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+    
+    # Se não encontrou, tenta buscar por nome
+    if [ -z "$ISTIOD_POD" ]; then
+        ISTIOD_POD=$(kubectl get pods -n istio-system --context=$context -o jsonpath='{.items[?(@.metadata.name=~"istiod.*")].metadata.name}' 2>/dev/null | awk '{print $1}' || echo "")
+    fi
+    
+    # Se ainda não encontrou, lista todos os pods e filtra
+    if [ -z "$ISTIOD_POD" ]; then
+        ISTIOD_POD=$(kubectl get pods -n istio-system --context=$context -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null | grep -E "^istiod" | head -1 || echo "")
+    fi
+    
+    # Se ainda não encontrou, tenta por deployment
+    if [ -z "$ISTIOD_POD" ]; then
+        ISTIOD_DEPLOY=$(kubectl get deployment -n istio-system --context=$context -o jsonpath='{range .items[?(@.metadata.name=~"istiod.*")]}{.metadata.name}{"\n"}{end}' 2>/dev/null | head -1 || echo "")
+        if [ -n "$ISTIOD_DEPLOY" ]; then
+            ISTIOD_POD=$(kubectl get pods -n istio-system --context=$context -l app=$ISTIOD_DEPLOY -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+        fi
+    fi
     
     if [ -z "$ISTIOD_POD" ]; then
         echo "   ❌ ERRO: Pod istiod não encontrado no cluster $cluster_name" >&2
+        echo "   💡 Verificando pods disponíveis em istio-system..." >&2
+        kubectl get pods -n istio-system --context=$context 2>/dev/null | head -5 >&2 || true
+        echo "" >&2
+        echo "   💡 Verifique se o ASM está instalado e os pods estão rodando:" >&2
+        echo "      kubectl get pods -n istio-system --context=$context" >&2
         return 1
     fi
     
@@ -95,10 +118,25 @@ obter_ca_cert() {
         fi
     fi
     
+    # Se ainda não encontrou, tenta obter do cluster CA (fallback)
+    if [ -z "$CA_CERT" ] || [ ${#CA_CERT} -lt 100 ]; then
+        echo "   ⚠️  Tentando obter certificado do cluster Kubernetes CA..." >&2
+        # Obtém o certificado CA do cluster como fallback
+        CLUSTER_CA=$(kubectl config view --context=$context --minify -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' 2>/dev/null | base64 -d || echo "")
+        if [ -n "$CLUSTER_CA" ] && [ ${#CLUSTER_CA} -gt 100 ]; then
+            CA_CERT="$CLUSTER_CA"
+            echo "   ⚠️  Usando certificado CA do cluster Kubernetes (pode não ser o ideal para ASM)" >&2
+        fi
+    fi
+    
     if [ -z "$CA_CERT" ] || [ ${#CA_CERT} -lt 100 ]; then
         echo "   ❌ ERRO: Não foi possível obter o certificado CA do cluster $cluster_name" >&2
-        echo "   💡 Tente manualmente:" >&2
-        echo "      kubectl exec -n istio-system --context=$context $ISTIOD_POD -c discovery -- cat /var/run/secrets/istio/root-cert.pem" >&2
+        if [ -n "$ISTIOD_POD" ]; then
+            echo "   💡 Tente manualmente:" >&2
+            echo "      kubectl exec -n istio-system --context=$context $ISTIOD_POD -c discovery -- cat /var/run/secrets/istio/root-cert.pem" >&2
+            echo "   ou" >&2
+            echo "      kubectl exec -n istio-system --context=$context $ISTIOD_POD -- cat /var/run/secrets/istio/root-cert.pem" >&2
+        fi
         return 1
     fi
     
