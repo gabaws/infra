@@ -207,6 +207,9 @@ resource "google_container_node_pool" "node_pools" {
     ignore_changes = [
       node_count
     ]
+    # Nota: machine_type não pode ser alterado em node pool existente
+    # Se precisar mudar o machine_type, será necessário recriar o node pool
+    # Use: terraform taint para forçar recriação ou delete o node pool manualmente
   }
 }
 

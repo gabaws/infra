@@ -13,7 +13,10 @@ terraform {
 
 # GKE Hub Membership for each cluster
 # As APIs mesh.googleapis.com e gkehub.googleapis.com já são habilitadas no main.tf
+# Usa provider google-beta para garantir sincronização correta com o Fleet
 resource "google_gke_hub_membership" "memberships" {
+  provider = google-beta
+  
   for_each = var.clusters
 
   membership_id = "${each.key}-membership"
