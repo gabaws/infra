@@ -62,6 +62,7 @@ echo "   master-engine ASM revision: $MASTER_ASM_REV"
 echo ""
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GATEWAY_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Função para obter o certificado CA do istiod
 obter_ca_cert() {
@@ -114,8 +115,8 @@ TEMP_DIR=$(mktemp -d)
 trap "rm -rf $TEMP_DIR" EXIT
 
 # Copia estrutura de diretórios
-cp -r "$SCRIPT_DIR/app-engine" "$TEMP_DIR/"
-cp -r "$SCRIPT_DIR/master-engine" "$TEMP_DIR/"
+cp -r "$GATEWAY_DIR/app-engine" "$TEMP_DIR/"
+cp -r "$GATEWAY_DIR/master-engine" "$TEMP_DIR/"
 
 # Obtém certificados CA
 echo ""
