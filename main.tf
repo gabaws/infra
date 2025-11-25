@@ -49,7 +49,11 @@ module "vpc" {
 
   secondary_ranges = var.secondary_ranges
 
-  depends_on = [google_project_service.required_apis]
+  depends_on = [
+    google_project_service.required_apis,
+    module.gke_clusters,        # Garante que clusters sejam completamente deletados antes da VPC
+    module.anthos_service_mesh  # Garante que ASM seja deletado antes da VPC
+  ]
 }
 
 module "gke_clusters" {
@@ -107,5 +111,6 @@ module "certificate" {
     module.dns
   ]
 }
+
 
 

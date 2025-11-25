@@ -46,6 +46,11 @@ resource "google_certificate_manager_certificate_map" "wildcard_map" {
   name        = "wildcard-${replace(var.domain_name, ".", "-")}-map"
   description = "Certificate Map para ${var.domain_name} e *.${var.domain_name}"
   project     = var.project_id
+
+  lifecycle {
+    # Garante que os entries sejam deletados antes do map
+    create_before_destroy = false
+  }
 }
 
 resource "google_certificate_manager_certificate_map_entry" "wildcard_entry" {
@@ -55,6 +60,10 @@ resource "google_certificate_manager_certificate_map_entry" "wildcard_entry" {
   certificates = [google_certificate_manager_certificate.wildcard.id]
   hostname     = "*.${var.domain_name}"
   project      = var.project_id
+
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 
 resource "google_certificate_manager_certificate_map_entry" "apex_entry" {
@@ -64,5 +73,9 @@ resource "google_certificate_manager_certificate_map_entry" "apex_entry" {
   certificates = [google_certificate_manager_certificate.wildcard.id]
   hostname     = var.domain_name
   project      = var.project_id
+
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 

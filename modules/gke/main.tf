@@ -132,7 +132,7 @@ resource "google_container_cluster" "clusters" {
   timeouts {
     create = "45m"
     update = "45m"
-    delete = "30m"
+    delete = "60m"  # Aumentado para dar tempo do GKE limpar todos os recursos dependentes
   }
 
   lifecycle {
@@ -207,9 +207,9 @@ resource "google_container_node_pool" "node_pools" {
     ignore_changes = [
       node_count
     ]
-    # Nota: machine_type não pode ser alterado em node pool existente
-    # Se precisar mudar o machine_type, será necessário recriar o node pool
-    # Use: terraform taint para forçar recriação ou delete o node pool manualmente
+    # Garante que node pools sejam deletados ANTES do cluster
+    # Isso é importante para que o GKE tenha tempo de limpar recursos dependentes
+    create_before_destroy = false
   }
 }
 
