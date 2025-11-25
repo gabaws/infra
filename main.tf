@@ -49,11 +49,14 @@ module "vpc" {
 
   secondary_ranges = var.secondary_ranges
 
-  depends_on = [
-    google_project_service.required_apis,
-    module.gke_clusters,        # Garante que clusters sejam completamente deletados antes da VPC
-    module.anthos_service_mesh  # Garante que ASM seja deletado antes da VPC
-  ]
+  depends_on = [google_project_service.required_apis]
+  
+  # Nota: Não adicionamos depends_on explícito para gke_clusters aqui porque
+  # isso criaria um ciclo (gke_clusters já depende de vpc via outputs).
+  # O Terraform já destrói na ordem correta porque:
+  # 1. gke_clusters usa outputs da VPC (network_name, subnets)
+  # 2. O timeout de 60 minutos do cluster dá tempo para limpeza automática
+  # 3. O GKE limpa automaticamente NEGs, firewalls e routes quando o cluster é deletado
 }
 
 module "gke_clusters" {
