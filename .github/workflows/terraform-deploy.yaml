@@ -43,17 +43,25 @@ jobs:
       - name: Setup Terraform + Auth
         uses: ./.github/actions/terraform-setup
 
+      - name: Stage .terraform.lock.hcl if changed
+        run: |
+          if [ -f .terraform.lock.hcl ] && [ -n "$(git diff .terraform.lock.hcl)" ]; then
+            git add .terraform.lock.hcl
+            echo "::notice::.terraform.lock.hcl atualizado e adicionado ao staging"
+          fi
+
       - name: Terraform Format
         run: terraform fmt -recursive
 
       - name: Check for formatting changes
         id: fmt-check
         run: |
-          if [ -n "$(git diff --name-only)" ]; then
+          # Verifica apenas arquivos .tf e .tfvars, ignorando .terraform.lock.hcl
+          if [ -n "$(git diff --name-only --diff-filter=ACMR | grep -E '\.(tf|tfvars)$')" ]; then
             echo "changed=true" >> $GITHUB_OUTPUT
             echo "::error::Arquivos Terraform não estão formatados corretamente!"
             echo "::error::Execute 'terraform fmt -recursive' localmente e faça commit das mudanças."
-            git diff
+            git diff -- '*.tf' '*.tfvars'
             exit 1
           else
             echo "changed=false" >> $GITHUB_OUTPUT
