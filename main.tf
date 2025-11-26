@@ -50,7 +50,7 @@ module "vpc" {
   secondary_ranges = var.secondary_ranges
 
   depends_on = [google_project_service.required_apis]
-  
+
   # Nota: Não adicionamos depends_on explícito para gke_clusters aqui porque
   # isso criaria um ciclo (gke_clusters já depende de vpc via outputs).
   # O Terraform já destrói na ordem correta porque:

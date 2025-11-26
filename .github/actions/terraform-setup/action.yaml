@@ -17,4 +17,5 @@ runs:
 
     - name: Terraform Init
       shell: bash
+      working-directory: ./infra
       run: terraform init
