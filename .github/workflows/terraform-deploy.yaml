@@ -45,15 +45,12 @@ jobs:
 
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
-        working-directory: ./infra
-
+      
       - name: Terraform Validate
         run: terraform validate
-        working-directory: ./infra
 
       - name: Terraform Plan
         run: terraform plan -no-color -out=tfplan
-        working-directory: ./infra
 
       - uses: actions/upload-artifact@v4
         with:
@@ -90,7 +87,6 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
-        working-directory: ./infra
 
 
   terraform-destroy:
@@ -104,4 +100,3 @@ jobs:
 
       - name: Terraform Destroy
         run: terraform destroy -auto-approve
-        working-directory: ./infra
