@@ -73,7 +73,7 @@ resource "null_resource" "karpenter_namespace" {
     cluster_name     = each.value.cluster_name
     cluster_location = each.value.cluster_location
     namespace        = var.karpenter_namespace
-    yaml_content     = templatefile("${path.module}/manifests/namespace.yaml", {
+    yaml_content = templatefile("${path.module}/manifests/namespace.yaml", {
       namespace = var.karpenter_namespace
     })
   }
@@ -85,13 +85,13 @@ resource "null_resource" "karpenter_namespace" {
         --project=${var.project_id} && \
       cat <<'EOF' | kubectl apply -f -
 ${templatefile("${path.module}/manifests/namespace.yaml", {
-  namespace = var.karpenter_namespace
+    namespace = var.karpenter_namespace
 })}
 EOF
     EOT
-  }
+}
 
-  depends_on = [data.google_container_cluster.clusters]
+depends_on = [data.google_container_cluster.clusters]
 }
 
 # Service Account Kubernetes para o Karpenter usando arquivo YAML
@@ -103,8 +103,8 @@ resource "null_resource" "karpenter_service_account" {
     cluster_location = each.value.cluster_location
     namespace        = var.karpenter_namespace
     sa_email         = google_service_account.karpenter[each.key].email
-    yaml_content     = templatefile("${path.module}/manifests/serviceaccount.yaml", {
-      namespace                = var.karpenter_namespace
+    yaml_content = templatefile("${path.module}/manifests/serviceaccount.yaml", {
+      namespace                 = var.karpenter_namespace
       gcp_service_account_email = google_service_account.karpenter[each.key].email
     })
   }
@@ -116,17 +116,17 @@ resource "null_resource" "karpenter_service_account" {
         --project=${var.project_id} && \
       cat <<'EOF' | kubectl apply -f -
 ${templatefile("${path.module}/manifests/serviceaccount.yaml", {
-  namespace                = var.karpenter_namespace
-  gcp_service_account_email = google_service_account.karpenter[each.key].email
+    namespace                 = var.karpenter_namespace
+    gcp_service_account_email = google_service_account.karpenter[each.key].email
 })}
 EOF
     EOT
-  }
+}
 
-  depends_on = [
-    null_resource.karpenter_namespace,
-    google_service_account_iam_member.karpenter_workload_identity
-  ]
+depends_on = [
+  null_resource.karpenter_namespace,
+  google_service_account_iam_member.karpenter_workload_identity
+]
 }
 
 # Helm Release para instalar o Karpenter usando helm

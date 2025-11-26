@@ -43,8 +43,21 @@ jobs:
       - name: Setup Terraform + Auth
         uses: ./.github/actions/terraform-setup
 
-      - name: Terraform Format Check
-        run: terraform fmt -check -recursive
+      - name: Terraform Format
+        run: terraform fmt -recursive
+
+      - name: Check for formatting changes
+        id: fmt-check
+        run: |
+          if [ -n "$(git diff --name-only)" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "::error::Arquivos Terraform não estão formatados corretamente!"
+            echo "::error::Execute 'terraform fmt -recursive' localmente e faça commit das mudanças."
+            git diff
+            exit 1
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
       
       - name: Terraform Validate
         run: terraform validate

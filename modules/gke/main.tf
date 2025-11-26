@@ -24,11 +24,11 @@ resource "google_container_cluster" "clusters" {
   initial_node_count       = 1
 
   network = var.network
-  
+
   # Seleciona a subnet correspondente à região do cluster
   # Valida que existe uma subnet para a região do cluster
   subnetwork = [for subnet_name, subnet in var.subnets : subnet.name
-    if subnet.region == each.value.region][0]
+  if subnet.region == each.value.region][0]
 
 
   private_cluster_config {
@@ -36,8 +36,8 @@ resource "google_container_cluster" "clusters" {
     enable_private_endpoint = each.value.enable_private_endpoint
     # Usa CIDR único por cluster para evitar conflitos
     # master-engine: 172.16.0.0/28, app-engine: 172.16.1.0/28
-    master_ipv4_cidr_block  = try(each.value.master_ipv4_cidr_block, 
-      each.key == "master-engine" ? "172.16.0.0/28" : "172.16.1.0/28")
+    master_ipv4_cidr_block = try(each.value.master_ipv4_cidr_block,
+    each.key == "master-engine" ? "172.16.0.0/28" : "172.16.1.0/28")
   }
 
   dynamic "master_authorized_networks_config" {
@@ -61,7 +61,7 @@ resource "google_container_cluster" "clusters" {
         if sec_range.range_name == "pods" && subnet.region == each.value.region
       ]
     ][0][0], "pods")
-    
+
     services_secondary_range_name = try([
       for subnet_name, subnet in var.subnets : [
         for sec_range in subnet.secondary_ip_ranges : sec_range.range_name
@@ -99,13 +99,13 @@ resource "google_container_cluster" "clusters" {
     }
   }
 
-    maintenance_policy {
-      recurring_window {
-        start_time = "2024-01-01T03:00:00Z"
-        end_time   = "2024-01-01T15:00:00Z"
-        recurrence = "FREQ=WEEKLY;BYDAY=SU"
-      }
+  maintenance_policy {
+    recurring_window {
+      start_time = "2024-01-01T03:00:00Z"
+      end_time   = "2024-01-01T15:00:00Z"
+      recurrence = "FREQ=WEEKLY;BYDAY=SU"
     }
+  }
 
   logging_config {
     enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS"]
@@ -132,7 +132,7 @@ resource "google_container_cluster" "clusters" {
   timeouts {
     create = "45m"
     update = "45m"
-    delete = "60m"  # Aumentado para dar tempo do GKE limpar todos os recursos dependentes
+    delete = "60m" # Aumentado para dar tempo do GKE limpar todos os recursos dependentes
   }
 
   lifecycle {
@@ -149,10 +149,10 @@ resource "google_container_node_pool" "node_pools" {
     for k, v in var.clusters : k => v
   }
 
-  name       = "${each.key}-node-pool"
-  location   = each.value.zone
-  cluster    = google_container_cluster.clusters[each.key].name
-  project    = var.project_id
+  name     = "${each.key}-node-pool"
+  location = each.value.zone
+  cluster  = google_container_cluster.clusters[each.key].name
+  project  = var.project_id
   # Com autoscaling habilitado, o node_count inicial é usado apenas na criação
   # O autoscaler gerencia o número de nodes depois disso
   node_count = each.value.initial_node_count
