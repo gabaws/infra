@@ -18,7 +18,7 @@ variable "karpenter_namespace" {
 }
 
 variable "karpenter_helm_repo" {
-  description = "Repositório Helm do Karpenter para GCP. Para GCP, use o repositório do Karpenter GCP Provider"
+  description = "Repositório Helm do Karpenter para GCP. Para GCP"
   type        = string
   # Nota: O repositório exato pode variar. Consulte https://github.com/cloudpilot-ai/karpenter-provider-gcp
   # Por padrão, usamos o repositório oficial do Karpenter
