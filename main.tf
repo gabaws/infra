@@ -115,5 +115,29 @@ module "certificate" {
   ]
 }
 
+module "karpenter" {
+  count = var.enable_karpenter && var.enable_gke ? 1 : 0
+
+  source = "./modules/karpenter"
+
+  project_id = var.project_id
+
+  clusters = {
+    for k, v in var.gke_clusters : k => {
+      cluster_name     = k
+      cluster_location = v.zone
+    }
+  }
+
+  karpenter_version      = var.karpenter_version
+  default_instance_types = var.karpenter_default_instance_types
+  additional_helm_values = var.karpenter_additional_helm_values
+
+  depends_on = [
+    google_project_service.required_apis,
+    module.gke_clusters
+  ]
+}
+
 
 

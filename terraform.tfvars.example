@@ -1,0 +1,56 @@
+# Configuração do Projeto
+project_id   = "infra-474223"
+region       = "us-central1"
+domain_name  = "cloudab.online"
+network_name = "main-vpc"
+manage_network = true
+
+# Habilitar GKE e ASM
+enable_gke = true
+enable_asm = true
+
+# Habilitar Karpenter
+enable_karpenter = true
+
+# Configuração do Karpenter
+karpenter_version = "v0.37.0"
+karpenter_default_instance_types = [
+  "e2-standard-2",
+  "e2-standard-4",
+  "e2-standard-8",
+  "e2-highmem-2",
+  "e2-highmem-4",
+  "e2-highmem-8",
+  "e2-highcpu-2",
+  "e2-highcpu-4",
+  "e2-highcpu-8"
+]
+
+# Configuração dos Clusters GKE
+gke_clusters = {
+  master-engine = {
+    region                     = "us-central1"
+    zone                       = "us-central1-a"
+    initial_node_count         = 1
+    min_node_count             = 1
+    max_node_count             = 4
+    machine_type               = "e2-standard-2"
+    disk_size_gb               = 50
+    enable_private_nodes       = true
+    enable_private_endpoint    = false
+    master_authorized_networks = []
+  }
+  
+  app-engine = {
+    region                     = "us-east1"
+    zone                       = "us-east1-b"
+    initial_node_count         = 1
+    min_node_count             = 1
+    max_node_count             = 4
+    machine_type               = "e2-standard-2"
+    disk_size_gb               = 50
+    enable_private_nodes       = true
+    enable_private_endpoint    = false
+    master_authorized_networks = []
+  }
+}

@@ -151,3 +151,37 @@ variable "enable_asm" {
   type        = bool
   default     = true
 }
+
+variable "enable_karpenter" {
+  description = "Habilita ou desabilita a instalação do Karpenter nos clusters GKE"
+  type        = bool
+  default     = false
+}
+
+variable "karpenter_version" {
+  description = "Versão do Karpenter a ser instalada"
+  type        = string
+  default     = "v0.37.0"
+}
+
+variable "karpenter_default_instance_types" {
+  description = "Lista de tipos de instâncias padrão que o Karpenter pode usar"
+  type        = list(string)
+  default = [
+    "e2-standard-2",
+    "e2-standard-4",
+    "e2-standard-8",
+    "e2-highmem-2",
+    "e2-highmem-4",
+    "e2-highmem-8",
+    "e2-highcpu-2",
+    "e2-highcpu-4",
+    "e2-highcpu-8"
+  ]
+}
+
+variable "karpenter_additional_helm_values" {
+  description = "Valores adicionais para o Helm chart do Karpenter"
+  type        = map(string)
+  default     = {}
+}
