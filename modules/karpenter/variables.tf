@@ -8,6 +8,8 @@ variable "clusters" {
   type = map(object({
     cluster_name     = string
     cluster_location = string
+    subnet_name      = string
+    zones            = list(string)
   }))
 }
 

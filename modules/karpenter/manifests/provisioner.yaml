@@ -1,0 +1,40 @@
+apiVersion: karpenter.sh/v1alpha5
+kind: Provisioner
+metadata:
+  name: default
+spec:
+  # Requisitos de recursos e tipos de instância para GCP
+  requirements:
+    - key: "node.kubernetes.io/instance-type"
+      operator: In
+      values: [${join(",", [for it in instance_types : "\"${it}\""])}]
+    - key: "topology.kubernetes.io/zone"
+      operator: In
+      values: [${join(",", [for z in zones : "\"${z}\""])}]
+    - key: "kubernetes.io/arch"
+      operator: In
+      values: ["amd64"]
+    - key: "kubernetes.io/os"
+      operator: In
+      values: ["linux"]
+  
+  # Provider específico para GCP - referencia o GCPNodeClass
+  providerRef:
+    name: default
+  
+  # Limites de recursos
+  limits:
+    resources:
+      cpu: "1000"
+      memory: 1000Gi
+  
+  # TTL para nodes vazios (em segundos)
+  ttlSecondsAfterEmpty: 30
+  
+  # TTL para nodes não inicializados (em segundos)
+  ttlSecondsUntilExpired: 2592000
+  
+  # Consolidação de nodes
+  consolidation:
+    enabled: true
+

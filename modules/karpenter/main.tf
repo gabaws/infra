@@ -164,3 +164,74 @@ resource "null_resource" "karpenter_helm_install" {
     google_service_account_iam_member.karpenter_workload_identity
   ]
 }
+
+# GCPNodeClass para o provider GCP do Karpenter
+resource "null_resource" "karpenter_nodeclass" {
+  for_each = var.clusters
+
+  triggers = {
+    cluster_name     = each.value.cluster_name
+    cluster_location = each.value.cluster_location
+    subnet_name      = each.value.subnet_name
+    sa_email         = google_service_account.karpenter[each.key].email
+    yaml_content = templatefile("${path.module}/manifests/nodeclass.yaml", {
+      cluster_name        = each.value.cluster_name
+      subnet_name         = each.value.subnet_name
+      service_account_email = google_service_account.karpenter[each.key].email
+    })
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      gcloud container clusters get-credentials ${each.value.cluster_name} \
+        --location=${each.value.cluster_location} \
+        --project=${var.project_id} && \
+      cat <<'EOF' | kubectl apply -f -
+${templatefile("${path.module}/manifests/nodeclass.yaml", {
+    cluster_name        = each.value.cluster_name
+    subnet_name         = each.value.subnet_name
+    service_account_email = google_service_account.karpenter[each.key].email
+})}
+EOF
+    EOT
+  }
+
+  depends_on = [
+    null_resource.karpenter_helm_install
+  ]
+}
+
+# Provisioner para o Karpenter gerenciar os nós
+resource "null_resource" "karpenter_provisioner" {
+  for_each = var.clusters
+
+  triggers = {
+    cluster_name     = each.value.cluster_name
+    cluster_location = each.value.cluster_location
+    instance_types   = join(",", var.default_instance_types)
+    zones            = join(",", each.value.zones)
+    yaml_content = templatefile("${path.module}/manifests/provisioner.yaml", {
+      instance_types = var.default_instance_types
+      zones          = each.value.zones
+    })
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      gcloud container clusters get-credentials ${each.value.cluster_name} \
+        --location=${each.value.cluster_location} \
+        --project=${var.project_id} && \
+      cat <<'EOF' | kubectl apply -f -
+${templatefile("${path.module}/manifests/provisioner.yaml", {
+    instance_types = var.default_instance_types
+    zones          = each.value.zones
+})}
+EOF
+    EOT
+  }
+
+  depends_on = [
+    null_resource.karpenter_helm_install,
+    null_resource.karpenter_nodeclass
+  ]
+}
