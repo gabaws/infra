@@ -92,17 +92,6 @@ jobs:
       - name: Setup Terraform + Auth
         uses: ./.github/actions/terraform-setup
 
-      - name: Setup kubectl
-        run: |
-          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-          chmod +x kubectl
-          sudo mv kubectl /usr/local/bin/
-
-      - name: Setup Helm
-        uses: azure/setup-helm@v4
-        with:
-          version: 'latest'
-
       - name: Download Terraform Plan
         uses: actions/download-artifact@v4
         with:

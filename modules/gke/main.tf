@@ -199,7 +199,16 @@ resource "google_container_node_pool" "node_pools" {
     }
   }
 
-  depends_on = [google_container_cluster.clusters]
+  # Aguarda o cluster estar totalmente pronto antes de criar o node pool
+  depends_on = [
+    google_container_cluster.clusters
+  ]
+
+  timeouts {
+    create = "30m"
+    update = "30m"
+    delete = "30m"
+  }
 
   lifecycle {
     # Ignora mudanças no node_count quando autoscaling está habilitado
