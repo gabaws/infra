@@ -9,23 +9,6 @@ manage_network = true
 enable_gke = true
 enable_asm = true
 
-# Habilitar Karpenter
-enable_karpenter = true
-
-# Configuração do Karpenter
-karpenter_version = "v0.37.0"
-karpenter_default_instance_types = [
-  "e2-standard-2",
-  "e2-standard-4",
-  "e2-standard-8",
-  "e2-highmem-2",
-  "e2-highmem-4",
-  "e2-highmem-8",
-  "e2-highcpu-2",
-  "e2-highcpu-4",
-  "e2-highcpu-8"
-]
-
 # Configuração dos Clusters GKE
 gke_clusters = {
   master-engine = {

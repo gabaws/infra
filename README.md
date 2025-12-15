@@ -71,10 +71,13 @@ Principais variáveis:
 
 ## 🔄 Pipeline CI/CD
 
-O GitHub Actions está configurado para:
-- Executar `terraform plan` em Pull Requests
-- Executar `terraform apply` automaticamente em pushes para `main`
-- Detectar mudanças em módulos específicos e executar apenas o necessário
+O Terraform pode ser executado via pipeline CI/CD sem necessidade de `gcloud` CLI instalado, pois:
+- Todos os recursos são gerenciados via providers do Terraform (google, google-beta)
+- Não há dependência de comandos locais (`kubectl`, `helm`, `gcloud`) durante o `terraform apply`
+
+**Nota**: Se você configurar uma pipeline, certifique-se de que:
+- As credenciais do GCP estejam configuradas (via Service Account)
+- O provider do Terraform tenha as permissões necessárias
 
 ## 📝 Outputs Importantes
 

@@ -145,41 +145,5 @@ module "certificate" {
   ]
 }
 
-module "karpenter" {
-  count = var.enable_karpenter && var.enable_gke ? 1 : 0
-
-  source = "./modules/karpenter"
-
-  project_id = var.project_id
-
-  clusters = {
-    for k, v in var.gke_clusters : k => {
-      cluster_name     = k
-      cluster_location = v.zone
-      # Obtém o nome da subnet baseado na região do cluster
-      subnet_name = [
-        for subnet_name, subnet in module.vpc.subnets : subnet.name
-        if subnet.region == v.region
-      ][0]
-      # Zonas disponíveis na região (pode ser expandido para múltiplas zonas)
-      zones = [
-        "${v.region}-a",
-        "${v.region}-b",
-        "${v.region}-c"
-      ]
-    }
-  }
-
-  karpenter_version      = var.karpenter_version
-  default_instance_types = var.karpenter_default_instance_types
-  additional_helm_values = var.karpenter_additional_helm_values
-
-  depends_on = [
-    google_project_service.required_apis,
-    module.gke_clusters,
-    module.vpc
-  ]
-}
-
 
 
